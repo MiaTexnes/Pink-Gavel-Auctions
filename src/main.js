@@ -1,5 +1,5 @@
 import { initDarkMode, toggleDarkMode } from "./components/darkLight.js";
-import Header from "./components/header.js";
+import { initializeHeader } from "./components/header.js"; // Changed this import
 import { isAuthenticated, logoutUser } from "./library/auth.js";
 import { createGradientButton } from "./components/buttons.js";
 import { renderCarousel } from "./pages/index.js";
@@ -131,11 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializePage() {
   console.log("Initializing page...");
 
-  // Initialize header only once
-  if (!window.headerInstance) {
-    const header = new Header();
-    header.init();
-  }
+  // Initialize header using the named export function
+  initializeHeader();
 
   // Add padding to main content to account for fixed header
   const main = document.querySelector("main");

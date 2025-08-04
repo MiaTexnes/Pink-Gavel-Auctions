@@ -1,5 +1,7 @@
 import { AUTH_ENDPOINTS } from "../services/baseApi.js";
 
+const API_BASE = "https://v2.api.noroff.dev";
+
 export async function loginUser(userData) {
   try {
     console.log("Login URL:", AUTH_ENDPOINTS.login);
@@ -118,8 +120,8 @@ export function isAuthenticated() {
 }
 
 export function getCurrentUser() {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  const userData = localStorage.getItem("user");
+  return userData ? JSON.parse(userData) : null;
 }
 
 export function updateUserData(newData) {
@@ -135,4 +137,30 @@ export function updateUserData(newData) {
 export function getAuthHeader() {
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// Add this function if it doesn't exist
+export async function getUserProfile(name) {
+  if (!isAuthenticated()) return null;
+
+  try {
+    const authHeader = getAuthHeader();
+    const response = await fetch(`${API_BASE}/auction/profiles/${name}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+        Authorization: authHeader.Authorization,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user profile");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
 }

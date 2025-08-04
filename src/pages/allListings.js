@@ -65,7 +65,7 @@ export function createListingCard(listing) {
   card.innerHTML = `
     ${
       imageUrl
-        ? `<img src="${imageUrl}" alt="${listing.title}" class="w-full h-40 object-contain bg-gray-100 dark:bg-gray-700 flex-shrink-0" onerror="this.outerHTML='<div class=\'w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0\'>No image on this listing</div>'">`
+        ? `<img src="${imageUrl}" alt="${listing.title}" class="w-full h-40 object-contain dark:bg-gray-700 flex-shrink-0" onerror="this.outerHTML='<div class=\'w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0\'>No image on this listing</div>'">`
         : `<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0">No image on this listing</div>`
     }
     <div class="p-4 flex-1 flex flex-col">

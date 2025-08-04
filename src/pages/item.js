@@ -3,6 +3,12 @@ import {
   getCurrentUser,
   getAuthHeader,
 } from "../library/auth.js";
+import { updateUserCredits } from "../components/header.js";
+import {
+  placeBid,
+  canUserBid,
+  getMinimumBid,
+} from "../services/biddingService.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -173,7 +179,7 @@ function renderListing(listing) {
   sellerAvatar.alt = `${listing.seller?.name || "Unknown"} avatar`;
   sellerName.textContent = listing.seller?.name || "Unknown Seller";
 
-  // Set bid information
+  // Set bid information using the service
   const bids = listing.bids || [];
   const highestBid =
     bids.length > 0 ? Math.max(...bids.map((bid) => bid.amount)) : 0;
@@ -186,8 +192,8 @@ function renderListing(listing) {
   const endDateTime = new Date(listing.endsAt);
   endDate.textContent = `Ends: ${endDateTime.toLocaleDateString()} ${endDateTime.toLocaleTimeString()}`;
 
-  // Set minimum bid
-  const minBid = highestBid + 1;
+  // Set minimum bid using the service
+  const minBid = getMinimumBid(bids);
   bidAmountInput.min = minBid;
   bidAmountInput.placeholder = `Minimum bid: ${minBid}`;
   minBidText.textContent = `Minimum bid: ${minBid} credits`;
@@ -367,38 +373,23 @@ async function fetchListing(id) {
 }
 
 // Place bid
-async function placeBid(amount) {
-  if (!isAuthenticated()) {
-    alert("You must be logged in to place a bid");
-    return;
-  }
-
+async function placeBidOnListing(amount) {
   try {
-    const authHeader = getAuthHeader();
-    const response = await fetch(
-      `${API_BASE}/auction/listings/${currentListing.id}/bids`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
-          Authorization: authHeader.Authorization,
-        },
-        body: JSON.stringify({ amount: parseInt(amount) }),
-      },
-    );
+    const result = await placeBid(currentListing.id, amount);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.errors?.[0]?.message || "Failed to place bid");
+    if (result.success) {
+      // Refresh the listing to show updated bid information
+      await fetchListing(currentListing.id);
+
+      // Show success message
+      alert(result.message || "Bid placed successfully!");
+    } else {
+      // Show error message
+      alert(result.error || "Failed to place bid");
     }
-
-    // Refresh the listing to show updated bid information
-    await fetchListing(currentListing.id);
-    alert("Bid placed successfully!");
   } catch (error) {
     console.error("Error placing bid:", error);
-    alert(error.message);
+    alert("An unexpected error occurred while placing the bid");
   }
 }
 
@@ -502,18 +493,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchListing(listingId);
 
-  // Bid form submission
+  // Bid form submission with improved validation
   if (bidForm) {
     bidForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const amount = bidAmountInput.value;
+      const amount = parseInt(bidAmountInput.value);
 
       if (!amount || amount < bidAmountInput.min) {
         alert(`Minimum bid is ${bidAmountInput.min} credits`);
         return;
       }
 
-      await placeBid(amount);
+      // Check if user can bid before attempting
+      const bidCheck = await canUserBid(currentListing);
+      if (!bidCheck.canBid) {
+        alert(bidCheck.reason);
+        return;
+      }
+
+      await placeBidOnListing(amount);
     });
   }
 
