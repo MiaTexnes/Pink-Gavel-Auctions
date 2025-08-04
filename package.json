@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:css": "npx tailwindcss -i src/css/input.css -o src/css/style.css --watch",
     "build": "vite build",
+    "build:css": "npx tailwindcss -i src/css/input.css -o src/css/style.css --minify",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
