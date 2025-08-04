@@ -112,7 +112,15 @@ class Header {
       <span class="inline-block align-middle mr-2">🌓</span>
       <span class="align-middle">Toggle Dark Mode</span>
     `;
-    darkModeToggle.addEventListener("click", toggleDarkMode);
+
+    // Enhanced event listener with debugging
+    darkModeToggle.addEventListener("click", (e) => {
+      console.log("📱 Mobile dark mode button clicked!");
+      e.preventDefault();
+      e.stopPropagation();
+      toggleDarkMode();
+    });
+
     this.mobileMenu.appendChild(darkModeToggle);
   }
 
@@ -251,7 +259,15 @@ class Header {
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
       </svg>
     `;
-    darkModeToggle.addEventListener("click", toggleDarkMode);
+
+    // Enhanced event listener with debugging
+    darkModeToggle.addEventListener("click", (e) => {
+      console.log("🖥️ Desktop dark mode button clicked!");
+      e.preventDefault();
+      e.stopPropagation();
+      toggleDarkMode();
+    });
+
     rightSection.appendChild(darkModeToggle);
 
     // Create mobile menu button (visible on all screen sizes to handle toggle)
