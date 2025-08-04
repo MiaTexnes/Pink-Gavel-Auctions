@@ -9,6 +9,15 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     minify: true,
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        style: "src/style.css",
+      },
+    },
+  },
+  css: {
+    postcss: "./postcss.config.js",
   },
   test: {
     globals: true,

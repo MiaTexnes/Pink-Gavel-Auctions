@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:css": "tailwindcss -i src/style.css -o dist/style.css --minify",
-    "watch:css": "tailwindcss -i src/style.css -o dist/style.css --watch",
+    "build:css": "vite build --watch",
+    "build:css-once": "tailwindcss -i src/style.css -o dist/style.css --minify",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint-staged": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky",
+    "deploy:prep": "npm run build:css-once"
   },
   "lint-staged": {
     "*.{js,ts,css,md,json}": [
