@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Auction Item | Pink Gavel Auctions</title>
-    <link href="src/style.css" rel="stylesheet" />
+    <link href="src/css/style.css" rel="stylesheet" />
   </head>
   <body class="bg-white dark:bg-gray-900 dark:text-white">
     <header></header>
@@ -20,21 +20,21 @@
       <!-- Error Message -->
       <div id="error-container" class="hidden text-center py-12">
         <p id="error-text" class="text-red-600 dark:text-red-400 text-lg"></p>
-        <a
-          href="/allListings.html"
+        <button
+          onclick="history.back()"
           class="inline-block mt-4 bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-lg transition-colors"
         >
-          Back to Listings
-        </a>
+          Back
+        </button>
       </div>
 
       <!-- Item Content -->
       <div id="item-content" class="hidden">
         <!-- Back Button -->
         <div class="mb-6">
-          <a
-            href="/allListings.html"
-            class="inline-flex items-center text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors"
+          <button
+            onclick="history.back()"
+            class="inline-flex items-center text-pink-600 hover:text-pink-700 dark:text-pink-400 dark:hover:text-pink-300 transition-colors cursor-pointer"
           >
             <svg
               class="w-5 h-5 mr-2"
@@ -49,8 +49,8 @@
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               ></path>
             </svg>
-            Back to Listings
-          </a>
+            Back
+          </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -83,21 +83,61 @@ export function renderCarousel(listings) {
     scrollBar.innerHTML = "";
     for (let i = 0; i < total; i++) {
       const thumb = document.createElement("img");
-      thumb.src =
+
+      // Better image URL handling with logo fallback
+      let imageUrl = "assets/images/logo.png"; // Changed to use your logo
+
+      if (
         listings[i].media &&
-        listings[i].media.length > 0 &&
-        listings[i].media[0] !== ""
-          ? listings[i].media[0]
-          : "https://placehold.co/40x40?text=S";
-      thumb.className =
-        "w-8 h-8 rounded-full object-cover border-2 cursor-pointer transition-all duration-200" +
-        (i === currentIndex
-          ? " border-pink-500 ring-2 ring-pink-400"
-          : " border-gray-300 opacity-60 hover:opacity-100");
+        Array.isArray(listings[i].media) &&
+        listings[i].media.length > 0
+      ) {
+        const media = listings[i].media[0];
+        // Check if media is a string URL or an object with url property
+        if (typeof media === "string" && media.trim() !== "") {
+          imageUrl = media;
+        } else if (
+          typeof media === "object" &&
+          media.url &&
+          media.url.trim() !== ""
+        ) {
+          imageUrl = media.url;
+        }
+      }
+
+      thumb.src = imageUrl;
+      thumb.alt = `Thumbnail for ${listings[i].title || "listing"}`;
+
+      // Enhanced styling with better spacing
+      thumb.className = `
+    w-8 h-8 rounded-full object-cover border-2 cursor-pointer
+    transition-all duration-200 flex-shrink-0 bg-gray-200 dark:bg-gray-700
+    ${
+      i === currentIndex
+        ? "border-pink-500 ring-2 ring-pink-400 opacity-100"
+        : "border-gray-300 dark:border-gray-600 opacity-60 hover:opacity-100"
+    }
+  `
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Add loading and error handling with logo fallback
+      thumb.addEventListener("load", () => {
+        thumb.classList.remove("bg-gray-200", "dark:bg-gray-700");
+      });
+
+      thumb.addEventListener("error", () => {
+        console.log(`Failed to load image for listing ${i}:`, imageUrl);
+        // Use logo as fallback instead of placeholder
+        thumb.src = "assets/images/logo.png";
+        thumb.classList.add("bg-gray-200", "dark:bg-gray-700");
+      });
+
       thumb.addEventListener("click", () => {
         currentIndex = i;
         updateCarousel();
       });
+
       scrollBar.appendChild(thumb);
     }
   }

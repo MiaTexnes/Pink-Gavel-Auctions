@@ -32,7 +32,8 @@ const bidAmountInput = document.getElementById("bid-amount");
 const minBidText = document.getElementById("min-bid-text");
 const ownerActions = document.getElementById("owner-actions");
 const authRequired = document.getElementById("auth-required");
-const deleteListing = document.getElementById("delete-listing-btn");
+// Remove this line - it's duplicated later:
+// const deleteListing = document.getElementById("delete-listing-btn");
 
 // Bidding History Elements
 const biddingHistory = document.getElementById("bidding-history");
