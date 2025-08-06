@@ -177,8 +177,6 @@ export class SearchAndSortComponent {
    * Setup individual search input
    */
   setupSearchInput(searchInput, clearButton) {
-    let isExpanded = false;
-
     // Real-time search with debouncing
     searchInput.addEventListener("input", (e) => {
       const query = e.target.value.trim();
@@ -227,46 +225,13 @@ export class SearchAndSortComponent {
       }
     });
 
-    // Focus handling for header search
+    // Simple focus handling - no expansion behavior for header search
     if (searchInput.id === "header-search") {
-      const expandSearch = () => {
-        if (!isExpanded) {
-          isExpanded = true;
-          searchInput.style.transition = "none";
-          searchInput.classList.remove("w-16");
-          searchInput.classList.add("w-64", "px-4");
-          searchInput.placeholder = "Search auctions...";
-          setTimeout(() => {
-            searchInput.style.transition = "";
-          }, 50);
-        }
-      };
-
-      const collapseSearch = () => {
-        if (searchInput.value.trim() === "" && isExpanded) {
-          isExpanded = false;
-          searchInput.style.transition = "none";
-          searchInput.classList.remove("w-64", "px-4");
-          searchInput.classList.add("w-16");
-          searchInput.placeholder = "Search...";
-          setTimeout(() => {
-            searchInput.style.transition = "";
-          }, 50);
-        }
-      };
-
-      searchInput.addEventListener("focus", expandSearch);
       searchInput.addEventListener("click", (e) => {
         e.stopPropagation();
-        expandSearch();
         if (!searchInput.matches(":focus")) {
           searchInput.focus();
         }
-      });
-      searchInput.addEventListener("blur", () => {
-        setTimeout(() => {
-          collapseSearch();
-        }, 200);
       });
     }
   }
