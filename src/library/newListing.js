@@ -90,13 +90,3 @@ export async function createListing({ title, description, endsAt, media }) {
     throw error;
   }
 }
-
-// Helper function to validate URLs
-function isValidUrl(string) {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}

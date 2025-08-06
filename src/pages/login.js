@@ -1,4 +1,5 @@
 import { loginUser } from "../library/auth.js";
+import { createGradientButton } from "../components/buttons.js";
 
 // DOM elements
 const loginForm = document.getElementById("login-form");
@@ -8,8 +9,8 @@ function showAlert(type, message) {
   alertContainer.innerHTML = "";
   alertContainer.className =
     type === "success"
-      ? "mt-4 bg-green-50 border border-green-200 text-green-700 p-3 rounded-sm"
-      : "mt-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-sm";
+      ? "mt-4 bg-green-50 border border-green-200 text-green-700 p-3 rounded-md"
+      : "mt-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-md";
   alertContainer.textContent = message;
 }
 
@@ -26,6 +27,20 @@ function toggleLoadingState(button, isLoading) {
   } else {
     button.disabled = false;
     button.textContent = "Login";
+  }
+}
+
+// Initialize the form styling
+function initializeFormStyling() {
+  // Login button already has the pink-green gradient classes in HTML
+
+  // Add register button using purple-pink gradient button component
+  const registerContainer = document.getElementById(
+    "register-button-container",
+  );
+  if (registerContainer) {
+    const registerButton = createGradientButton("Register", "register.html");
+    registerContainer.appendChild(registerButton);
   }
 }
 
@@ -76,6 +91,9 @@ async function handleLogin(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
   if (loginForm) {
+    // Initialize form styling with gradient buttons
+    initializeFormStyling();
+
     loginForm.addEventListener("submit", handleLogin);
     const emailField = document.getElementById("email");
     if (emailField && emailField.value === "") {

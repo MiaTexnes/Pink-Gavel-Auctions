@@ -9,6 +9,7 @@ import {
   canUserBid,
   getMinimumBid,
 } from "../services/biddingService.js";
+import { searchAndSortComponent } from "../components/searchAndSort.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -484,6 +485,9 @@ function populateEditForm() {
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize search component for this page
+  searchAndSortComponent.init();
+
   const listingId = getListingId();
 
   if (!listingId) {
@@ -609,7 +613,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Add search event listener (updated to handle dropdown navigation)
+  window.addEventListener("searchPerformed", handleSearchResults);
 });
+
+// Update the search results handler
+function handleSearchResults(event) {
+  const { query, results, error } = event.detail;
+
+  console.log("Search results received:", { query, results, error });
+
+  if (error) {
+    console.error("Search error:", error);
+    return;
+  }
+
+  if (query.trim() === "") {
+    return;
+  }
+
+  // For item page, redirect to listings page with search results
+  if (results.length > 0) {
+    window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+  } else {
+    console.log("No search results found for:", query);
+  }
+}
 
 // Cleanup on page unload
 window.addEventListener("beforeunload", () => {

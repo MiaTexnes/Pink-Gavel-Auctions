@@ -4,7 +4,7 @@ import {
   logoutUser,
   getUserProfile,
 } from "../library/auth.js";
-import { searchComponent } from "./searchComponent.js";
+import { searchAndSortComponent } from "./searchAndSort.js";
 
 // Global variable to store current credits
 let userCredits = null;
@@ -75,7 +75,7 @@ function renderHeader() {
                 type="text"
                 id="header-search"
                 placeholder="Search..."
-                class="w-8 h-8 px-2 py-1 pl-8 pr-8 text-sm border border-gray-300 dark:border-gray-600 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 focus:w-64 focus:px-4 focus:placeholder-gray-400 dark:focus:placeholder-gray-400 hover:w-64 hover:px-4 hover:placeholder-gray-400 dark:hover:placeholder-gray-400 transition-all duration-300 ease-in-out"
+                class="w-16 h-8 px-2 py-1 pl-8 pr-8 text-sm border border-gray-300 dark:border-gray-600 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer"
               >
               <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,7 +84,7 @@ function renderHeader() {
               </div>
               <button
                 id="clear-search"
-                class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden transition-colors opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+                class="absolute inset-y-0 right-0 pr-2 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden z-10"
                 title="Clear search"
               >
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,6 +184,8 @@ function renderHeader() {
 }
 
 function setupEventListeners() {
+  console.log("Setting up header event listeners...");
+
   // Logout functionality
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
@@ -202,30 +204,47 @@ function setupEventListeners() {
     });
   }
 
-  // Initialize search component
-  searchComponent.init();
+  // Initialize search and sort component
+  console.log("Initializing search and sort component...");
+  try {
+    searchAndSortComponent.init();
+    console.log("✅ Search and sort component initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize search and sort component:", error);
+  }
 }
 
 // Initialize header
 export function initializeHeader() {
+  console.log("Initializing header...");
   const headerElement = document.querySelector("header");
   if (headerElement) {
     headerElement.innerHTML = renderHeader();
-    setupEventListeners();
 
-    // Update credits display if user is logged in
-    if (isAuthenticated()) {
-      updateCreditsDisplay();
-    }
+    // Setup event listeners AFTER the HTML is rendered
+    setTimeout(() => {
+      setupEventListeners();
+
+      // Update credits display if user is logged in
+      if (isAuthenticated()) {
+        updateCreditsDisplay();
+      }
+    }, 0);
+  } else {
+    console.error("❌ Header element not found in DOM");
   }
 }
 
 // Auto-initialize when the script loads
-document.addEventListener("DOMContentLoaded", initializeHeader);
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM Content Loaded - initializing header");
+  initializeHeader();
+});
 
 // Listen for storage changes to update header when login state changes
 window.addEventListener("storage", (e) => {
   if (e.key === "accessToken" || e.key === "user") {
+    console.log("Auth state changed, reinitializing header");
     initializeHeader();
   }
 });

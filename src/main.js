@@ -2,7 +2,6 @@ import { initDarkMode, toggleDarkMode } from "./components/darkLight.js";
 import { initializeHeader } from "./components/header.js"; // Changed this import
 import { isAuthenticated, logoutUser } from "./library/auth.js";
 import { createGradientButton } from "./components/buttons.js";
-import { renderCarousel } from "./pages/index.js";
 import { loginUser } from "./library/auth.js";
 
 // Initialize dark mode for the whole page
