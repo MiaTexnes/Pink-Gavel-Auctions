@@ -91,6 +91,10 @@ function renderHeader() {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
+              <!-- Header Search Dropdown -->
+              <div id="header-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <!-- Search results will be populated here -->
+              </div>
             </div>
           </div>
 
@@ -126,7 +130,7 @@ function renderHeader() {
               authenticated
                 ? `
               <div class="flex items-center space-x-3">
-                <span class="text-gray-700 dark:text-gray-300">Hello, ${currentUser.name}</span>
+                <span class="hidden sm:block text-gray-700 dark:text-gray-300">Hello, ${currentUser.name}</span>
                 <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
                   Logout
                 </button>
@@ -141,7 +145,7 @@ function renderHeader() {
             }
 
             <!-- Mobile Menu Button -->
-            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
               </svg>
@@ -165,16 +169,28 @@ function renderHeader() {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
               </div>
+              <!-- Mobile Search Dropdown -->
+              <div id="mobile-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <!-- Search results will be populated here -->
+              </div>
             </div>
 
-            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Home</a>
-            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Auctions</a>
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Home</a>
+            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Auctions</a>
             ${
               authenticated
                 ? `
-              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Profile</a>
+              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Profile</a>
+              <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+                <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+              </div>
             `
-                : ""
+                : `
+              <div class="flex flex-col space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Login</a>
+                <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
+              </div>
+            `
             }
           </div>
         </div>
@@ -186,21 +202,31 @@ function renderHeader() {
 function setupEventListeners() {
   console.log("Setting up header event listeners...");
 
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (mobileMenuBtn && mobileMenu) {
+    console.log("Setting up mobile menu toggle");
+    mobileMenuBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log("Mobile menu button clicked");
+      mobileMenu.classList.toggle("hidden");
+    });
+  } else {
+    console.error("Mobile menu elements not found:", {
+      mobileMenuBtn,
+      mobileMenu,
+    });
+  }
+
   // Logout functionality
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
       logoutUser();
-    });
-  }
-
-  // Mobile menu toggle
-  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
-  const mobileMenu = document.getElementById("mobile-menu");
-  if (mobileMenuBtn && mobileMenu) {
-    mobileMenuBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
     });
   }
 
@@ -221,15 +247,13 @@ export function initializeHeader() {
   if (headerElement) {
     headerElement.innerHTML = renderHeader();
 
-    // Setup event listeners AFTER the HTML is rendered
-    setTimeout(() => {
-      setupEventListeners();
+    // Setup event listeners immediately after rendering
+    setupEventListeners();
 
-      // Update credits display if user is logged in
-      if (isAuthenticated()) {
-        updateCreditsDisplay();
-      }
-    }, 0);
+    // Update credits display if user is logged in
+    if (isAuthenticated()) {
+      updateCreditsDisplay();
+    }
   } else {
     console.error("❌ Header element not found in DOM");
   }
