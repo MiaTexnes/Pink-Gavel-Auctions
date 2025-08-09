@@ -3,6 +3,10 @@ import { initializeHeader } from "./components/header.js"; // Changed this impor
 import { isAuthenticated, logoutUser } from "./library/auth.js";
 import { createGradientButton } from "./components/buttons.js";
 import { loginUser } from "./library/auth.js";
+import {
+  renderCarousel,
+  setupCarouselScrollButtons,
+} from "./components/carousel.js";
 
 // Initialize dark mode for the whole page
 initDarkMode();

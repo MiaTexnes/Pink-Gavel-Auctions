@@ -12,6 +12,9 @@ const loadingSpinner = document.getElementById("loading-spinner");
 let allListings = [];
 let filteredListings = [];
 
+// Global variable to store selected media URLs
+let selectedMediaUrls = [];
+
 function showMessage(msg, type = "info") {
   if (!messageText || !messageContainer || !listingsContainer) return;
   messageText.textContent = msg;
@@ -70,29 +73,46 @@ export function createListingCard(listing) {
   const card = document.createElement("a");
   card.href = `/item.html?id=${listing.id}`;
   card.className =
-    "block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden w-72 h-[420px] flex flex-col mx-auto";
+    "block bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-[420px] w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 border border-gray-100 dark:border-gray-700";
 
+  // Template with fixed sizing
   card.innerHTML = `
     ${
       imageUrl
-        ? `<img src="${imageUrl}" alt="${listing.title}" class="w-full h-40 object-contain dark:bg-gray-700 flex-shrink-0" onerror="this.outerHTML='<div class=\'w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0\'>No image on this listing</div>'">`
-        : `<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0">No image on this listing</div>`
+        ? `<div class="w-full h-40 flex-shrink-0 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+            <img src="${imageUrl}" alt="${listing.title}" class="w-full h-full object-cover listing-image transition-transform duration-300 hover:scale-110">
+           </div>`
+        : `<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600">
+            No image on this listing
+           </div>`
     }
-    <div class="p-4 flex-1 flex flex-col">
-      <h2 class="text-xl font-semibold mb-2 truncate">${listing.title}</h2>
-      <p class="text-gray-700 dark:text-gray-300 text-sm mb-3 line-clamp-2">${
+    <div class="p-4 flex-1 flex flex-col min-h-0">
+      <h2 class="text-xl font-semibold mb-2 line-clamp-2 min-h-[3.5rem] text-gray-900 dark:text-white transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400">${listing.title}</h2>
+      <p class="text-gray-700 dark:text-gray-300 text-sm mb-3 line-clamp-3 flex-1 min-h-[4.5rem] transition-colors duration-200">${
         listing.description || "No description provided."
       }</p>
-      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
-        <span>${timeLeftString}</span>
-        <span>Bids: ${listing._count?.bids || 0}</span>
+      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0">
+        <span class="font-medium ${timeLeftMs < 0 ? "text-red-500 dark:text-red-400" : timeLeftMs < 24 * 60 * 60 * 1000 ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"} transition-colors duration-200">${timeLeftString}</span>
+        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105">Bids: ${listing._count?.bids || 0}</span>
       </div>
-      <div class="flex items-center space-x-2 mt-auto">
-        <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600">
-        <span class="text-gray-800 dark:text-gray-200 font-medium">${sellerName}</span>
+      <div class="flex items-center space-x-2 flex-shrink-0 transition-all duration-200 hover:translate-x-1">
+        <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0">
+        <span class="text-gray-800 dark:text-gray-200 font-medium truncate transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400">${sellerName}</span>
       </div>
     </div>
   `;
+
+  // Handle image error with JavaScript instead of inline HTML
+  if (imageUrl) {
+    const img = card.querySelector(".listing-image");
+    if (img) {
+      img.addEventListener("error", function () {
+        this.parentElement.outerHTML =
+          '<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600">No image on this listing</div>';
+      });
+    }
+  }
+
   return card;
 }
 
@@ -111,39 +131,54 @@ async function fetchAllListings() {
       headers["Authorization"] = token;
     }
 
+    console.log("Making API request with headers:", headers);
+
     const response = await fetch(
-      `${API_BASE}/auction/listings?_seller=true&_bids=true`,
+      `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
       {
         headers: headers,
       },
     );
 
+    console.log("API Response status:", response.status);
+    console.log(
+      "API Response headers:",
+      Object.fromEntries(response.headers.entries()),
+    );
+
     if (!response.ok) {
       const errorData = await response.json();
+      console.error("API Error:", errorData);
       throw new Error(
         errorData.errors?.[0]?.message || "Failed to fetch listings.",
       );
     }
 
     const responseData = await response.json();
-    console.log("API Response:", responseData);
+    console.log("Full API Response:", responseData);
+    console.log("Response data structure:", {
+      hasData: !!responseData.data,
+      dataLength: responseData.data?.length || 0,
+      firstItem: responseData.data?.[0],
+      meta: responseData.meta,
+    });
+
     const listings = responseData.data || [];
 
-    // Sort listings by newest first (created date descending)
-    const sortedListings = listings.sort(
-      (a, b) => new Date(b.created) - new Date(a.created),
-    );
-
-    // Store sorted listings for search functionality
-    allListings = sortedListings;
-
-    if (sortedListings.length === 0) {
+    if (listings.length === 0) {
+      console.log("No listings returned from API");
       showMessage("No listings found.", "info");
       return;
     }
 
-    // Display sorted listings initially
-    displayListings(sortedListings);
+    // Debug the first few listings
+    console.log("First 3 listings:", listings.slice(0, 3));
+
+    // Store listings globally for search functionality
+    allListings = listings;
+
+    // Display listings without additional sorting initially
+    displayListings(listings);
   } catch (error) {
     console.error("Error fetching listings:", error);
     showMessage(`Error: ${error.message}`, "error");
@@ -190,11 +225,31 @@ function handleSearchResults(event) {
     return;
   }
 
-  // Always display the results from the search component, whether it's a search or just sorting
+  // Handle special case for active auctions with no results
+  if (sortBy === "active-auctions" && results.length === 0) {
+    if (query.trim() === "") {
+      showMessage("No active auctions available at the moment.", "info");
+    } else {
+      showMessage(`No active auctions found for "${query}".`, "info");
+    }
+    return;
+  }
+
+  // Handle empty results for other sorts
+  if (results.length === 0) {
+    if (query.trim() === "") {
+      showMessage("No listings available at the moment.", "info");
+    } else {
+      showMessage(`No results found for "${query}".`, "info");
+    }
+    return;
+  }
+
+  // Always display the results from the search component
   if (query.trim() === "") {
     // No search query - just sorting/displaying all listings
     removeSearchIndicator();
-    displayListings(results); // Use the sorted results, not allListings
+    displayListings(results);
   } else {
     // Search results with query
     filteredListings = results;
@@ -271,6 +326,12 @@ function openAddListingModal() {
   if (listingEndDate) {
     listingEndDate.min = localDateTime;
   }
+
+  // Setup media modal button
+  setupMediaModalButton();
+  // Reset selected media
+  selectedMediaUrls = [];
+  updateMediaPreview();
 }
 
 function closeAddListing() {
@@ -280,7 +341,245 @@ function closeAddListing() {
   const form = document.getElementById("addListingForm");
   if (form) {
     form.reset();
+    selectedMediaUrls = [];
+    updateMediaPreview();
   }
+}
+
+// Media Modal functions
+function openMediaModal() {
+  const mediaModal = document.getElementById("addMediaModal");
+  const listingModal = document.getElementById("addListingModal");
+
+  console.log("Opening media modal"); // Debug log
+  console.log("Media modal found:", !!mediaModal); // Debug log
+  console.log("Listing modal found:", !!listingModal); // Debug log
+
+  if (!mediaModal || !listingModal) return;
+
+  listingModal.classList.add("hidden");
+  mediaModal.classList.remove("hidden");
+
+  // Use the simpler event setup
+  setupMediaInputsSimple();
+  populateExistingMedia();
+}
+
+function closeMediaModal() {
+  const mediaModal = document.getElementById("addMediaModal");
+  const listingModal = document.getElementById("addListingModal");
+  if (!mediaModal || !listingModal) return;
+
+  mediaModal.classList.add("hidden");
+  listingModal.classList.remove("hidden");
+  resetMediaInputs();
+}
+
+function setupMediaModalButton() {
+  const openMediaBtn = document.getElementById("openMediaModalBtn");
+  if (openMediaBtn) {
+    // Remove existing event listeners
+    const newBtn = openMediaBtn.cloneNode(true);
+    openMediaBtn.parentNode.replaceChild(newBtn, openMediaBtn);
+    newBtn.addEventListener("click", openMediaModal);
+  }
+}
+
+// Setup dynamic media inputs
+function setupMediaInputs() {
+  const addMoreBtn = document.getElementById("addMoreUrlBtn");
+  const backBtn = document.getElementById("backToListingBtn");
+  const mediaForm = document.getElementById("addMediaForm");
+
+  // Clear existing event listeners and add new ones
+  if (addMoreBtn) {
+    // Remove existing listeners by cloning
+    const newAddMoreBtn = addMoreBtn.cloneNode(true);
+    addMoreBtn.parentNode.replaceChild(newAddMoreBtn, addMoreBtn);
+
+    // Add event listener to the new button
+    newAddMoreBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      console.log("Add more media button clicked"); // Debug log
+
+      const mediaContainer = document.getElementById("mediaUrlInputs");
+      if (!mediaContainer) {
+        console.error("Media container not found");
+        return;
+      }
+
+      const currentInputs = mediaContainer.querySelectorAll("input").length;
+      console.log("Current inputs count:", currentInputs); // Debug log
+
+      const newInput = document.createElement("input");
+      newInput.type = "url";
+      newInput.name = "mediaUrl";
+      newInput.placeholder = `Image URL ${currentInputs + 1}`;
+      newInput.className =
+        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+
+      mediaContainer.appendChild(newInput);
+      console.log("New input added"); // Debug log
+    });
+  } else {
+    console.error("Add more button not found");
+  }
+
+  if (backBtn) {
+    const newBackBtn = backBtn.cloneNode(true);
+    backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+    newBackBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeMediaModal();
+    });
+  }
+
+  if (mediaForm) {
+    const newMediaForm = mediaForm.cloneNode(true);
+    mediaForm.parentNode.replaceChild(newMediaForm, mediaForm);
+    newMediaForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      collectAndSaveMediaUrls();
+      closeMediaModal();
+    });
+  }
+}
+
+// Alternative approach - simpler event handling
+function setupMediaInputsSimple() {
+  // Remove any existing event listeners by using onclick
+  const addMoreBtn = document.getElementById("addMoreUrlBtn");
+  const backBtn = document.getElementById("backToListingBtn");
+  const mediaForm = document.getElementById("addMediaForm");
+
+  if (addMoreBtn) {
+    addMoreBtn.onclick = function (e) {
+      e.preventDefault();
+      console.log("Add more media button clicked"); // Debug log
+
+      const mediaContainer = document.getElementById("mediaUrlInputs");
+      if (!mediaContainer) {
+        console.error("Media container not found");
+        return;
+      }
+
+      const currentInputs = mediaContainer.querySelectorAll("input").length;
+      console.log("Current inputs count:", currentInputs); // Debug log
+
+      const newInput = document.createElement("input");
+      newInput.type = "url";
+      newInput.name = "mediaUrl";
+      newInput.placeholder = `Image URL ${currentInputs + 1}`;
+      newInput.className =
+        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+
+      mediaContainer.appendChild(newInput);
+      console.log("New input added"); // Debug log
+    };
+  } else {
+    console.error("Add more button not found");
+  }
+
+  if (backBtn) {
+    backBtn.onclick = function (e) {
+      e.preventDefault();
+      closeMediaModal();
+    };
+  }
+
+  if (mediaForm) {
+    mediaForm.onsubmit = function (e) {
+      e.preventDefault();
+      collectAndSaveMediaUrls();
+      closeMediaModal();
+    };
+  }
+}
+
+// Populate existing media URLs in the modal
+function populateExistingMedia() {
+  const mediaContainer = document.getElementById("mediaUrlInputs");
+  if (!mediaContainer) return;
+
+  // Clear existing inputs
+  mediaContainer.innerHTML = "";
+
+  // Add existing URLs or default empty inputs
+  if (selectedMediaUrls.length > 0) {
+    selectedMediaUrls.forEach((url, index) => {
+      const input = document.createElement("input");
+      input.type = "url";
+      input.name = "mediaUrl";
+      input.placeholder = `Image URL ${index + 1}`;
+      input.value = url;
+      input.className =
+        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+      mediaContainer.appendChild(input);
+    });
+  } else {
+    // Add default two empty inputs
+    for (let i = 1; i <= 2; i++) {
+      const input = document.createElement("input");
+      input.type = "url";
+      input.name = "mediaUrl";
+      input.placeholder = `Image URL ${i}`;
+      input.className =
+        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+      mediaContainer.appendChild(input);
+    }
+  }
+}
+
+// Reset media inputs to default state
+function resetMediaInputs() {
+  const mediaContainer = document.getElementById("mediaUrlInputs");
+  if (mediaContainer) {
+    mediaContainer.innerHTML = `
+      <input
+        type="url"
+        name="mediaUrl"
+        placeholder="Image URL 1"
+        class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+      />
+      <input
+        type="url"
+        name="mediaUrl"
+        placeholder="Image URL 2"
+        class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+      />
+    `;
+  }
+}
+
+// Collect media URLs from modal and save them
+function collectAndSaveMediaUrls() {
+  const mediaInputs = document.querySelectorAll("input[name='mediaUrl']");
+  selectedMediaUrls = Array.from(mediaInputs)
+    .map((input) => input.value.trim())
+    .filter((url) => url.length > 0);
+
+  updateMediaPreview();
+}
+
+// Update the media preview in the main modal
+function updateMediaPreview() {
+  const mediaCount = document.getElementById("mediaCount");
+  if (mediaCount) {
+    if (selectedMediaUrls.length === 0) {
+      mediaCount.textContent = "No media selected";
+      mediaCount.className = "text-gray-600 dark:text-gray-400";
+    } else {
+      mediaCount.textContent = `${selectedMediaUrls.length} media item${
+        selectedMediaUrls.length > 1 ? "s" : ""
+      } selected`;
+      mediaCount.className = "text-green-600 dark:text-green-400";
+    }
+  }
+}
+
+// Function to collect media URLs from form (updated to use selectedMediaUrls)
+function collectMediaUrls() {
+  return selectedMediaUrls;
 }
 
 // Function to update UI based on authentication status
@@ -375,14 +674,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const title = document.getElementById("listingTitle").value.trim();
       const description = document.getElementById("listingDesc").value.trim();
       const endsAt = document.getElementById("listingEndDate").value;
-      const mediaUrl = document.getElementById("listingImage").value.trim();
 
       try {
         await createListing({
           title,
           description,
           endsAt,
-          media: mediaUrl ? [mediaUrl] : [],
+          media: selectedMediaUrls, // Use selectedMediaUrls instead of collectMediaUrls()
         });
         closeAddListing();
         fetchAllListings();

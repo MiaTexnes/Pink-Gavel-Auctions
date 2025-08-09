@@ -1,4 +1,15 @@
 // newListing.js
+
+// Helper function to validate URL format
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 // Function to create a new listing via the API
 export async function createListing({ title, description, endsAt, media }) {
   const token = localStorage.getItem("token");

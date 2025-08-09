@@ -51,7 +51,7 @@ function renderHeader() {
           <div class="flex items-center space-x-3">
             <a href="/index.html" class="flex items-center space-x-2">
               <img src="/assets/images/logo.png" alt="Pink Gavel Auctions" class="h-8 w-8">
-              <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel</span>
+              <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
             </a>
           </div>
 
@@ -75,13 +75,26 @@ function renderHeader() {
                 type="text"
                 id="header-search"
                 placeholder="Search auctions..."
-                class="w-64 h-10 px-4 py-2 pl-10 pr-10 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                class="w-64 h-10 px-4 py-2 pr-20 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
               >
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <!-- Search Glass Icon - positioned below input -->
+              <div class="absolute top-full left-3 mt-1 flex items-center pointer-events-none z-10">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
               </div>
+              <!-- Search Button -->
+              <button
+                id="search-btn"
+                type="button"
+                class="absolute inset-y-0 right-12 px-3 flex items-center text-white bg-pink-500 hover:bg-pink-600 rounded-r-lg transition-colors"
+                title="Search"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </button>
+              <!-- Clear Button -->
               <button
                 id="clear-search"
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden z-10 transition-colors"
@@ -92,7 +105,7 @@ function renderHeader() {
                 </svg>
               </button>
               <!-- Header Search Dropdown -->
-              <div id="header-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+              <div id="header-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
                 <!-- Search results will be populated here -->
               </div>
             </div>
@@ -162,15 +175,27 @@ function renderHeader() {
                 type="text"
                 id="mobile-search"
                 placeholder="Search auctions..."
-                class="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                class="w-full px-4 py-2 pr-20 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               >
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <!-- Search Glass Icon - positioned below input -->
+              <div class="absolute top-full left-3 mt-1 flex items-center pointer-events-none z-10">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
               </div>
+              <!-- Mobile Search Button -->
+              <button
+                id="mobile-search-btn"
+                type="button"
+                class="absolute inset-y-0 right-0 px-3 flex items-center text-white bg-pink-500 hover:bg-pink-600 rounded-r-lg transition-colors"
+                title="Search"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </button>
               <!-- Mobile Search Dropdown -->
-              <div id="mobile-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+              <div id="mobile-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
                 <!-- Search results will be populated here -->
               </div>
             </div>
@@ -218,6 +243,36 @@ function setupEventListeners() {
     console.error("Mobile menu elements not found:", {
       mobileMenuBtn,
       mobileMenu,
+    });
+  }
+
+  // Search button functionality
+  const searchBtn = document.getElementById("search-btn");
+  const mobileSearchBtn = document.getElementById("mobile-search-btn");
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const headerSearch = document.getElementById("header-search");
+      if (headerSearch) {
+        const query = headerSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+  }
+
+  if (mobileSearchBtn) {
+    mobileSearchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const mobileSearch = document.getElementById("mobile-search");
+      if (mobileSearch) {
+        const query = mobileSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
     });
   }
 

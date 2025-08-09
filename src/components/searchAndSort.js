@@ -54,7 +54,7 @@ export class SearchAndSortComponent {
     const dropdown = document.createElement("div");
     dropdown.id = dropdownId;
     dropdown.className =
-      "absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 hidden max-h-80 overflow-y-auto";
+      "absolute top-full w-full mt-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 hidden max-h-80 overflow-y-auto";
 
     searchContainer.style.position = "relative";
     searchContainer.appendChild(dropdown);
@@ -142,11 +142,22 @@ export class SearchAndSortComponent {
       newest: "newest",
       oldest: "oldest",
       "most-bids": "most-bids",
-      "shortest-time": "ending-soon",
+      "active-auctions": "active-auctions", // Changed from "shortest-time": "ending-soon"
     };
 
     this.currentSort = sortMapping[sortType] || sortType;
     console.log("Sort type set to:", this.currentSort);
+  }
+
+  /**
+   * Filter active auctions (auctions that haven't ended)
+   */
+  filterActiveAuctions(listings) {
+    const now = new Date();
+    return listings.filter((listing) => {
+      const endDate = new Date(listing.endsAt);
+      return endDate > now; // Only include auctions that haven't ended
+    });
   }
 
   /**
@@ -396,9 +407,16 @@ export class SearchAndSortComponent {
         results = await this.searchAPI(query);
       }
 
+      // Apply sorting (this will also filter active auctions if needed)
       results = this.sortListings(results, this.currentSort);
 
       console.log("Search completed, results:", results.length);
+
+      // Add special messaging for active auctions
+      if (this.currentSort === "active-auctions" && results.length === 0) {
+        console.log("No active auctions found");
+      }
+
       this.dispatchSearchEvent(query, results);
     } catch (error) {
       console.error("Search error:", error);
@@ -436,10 +454,10 @@ export class SearchAndSortComponent {
         }
       }
 
-      console.log("Making API request for search:", query);
+      console.log("Making search API request for query:", query);
 
       const response = await fetch(
-        `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100`,
+        `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
         { headers },
       );
 
@@ -450,7 +468,7 @@ export class SearchAndSortComponent {
       const responseData = await response.json();
       const allListings = responseData.data || [];
 
-      console.log("API returned", allListings.length, "listings");
+      console.log("Search API returned", allListings.length, "listings");
 
       // Filter locally for more comprehensive search
       const results = this.filterListings(allListings, query);
@@ -498,7 +516,7 @@ export class SearchAndSortComponent {
    * Sort listings based on criteria
    */
   sortListings(listings, sortBy) {
-    const sorted = [...listings]; // Create a copy to avoid mutating original
+    let sorted = [...listings]; // Create a copy to avoid mutating original
 
     console.log("Sorting", sorted.length, "listings by:", sortBy);
 
@@ -509,8 +527,12 @@ export class SearchAndSortComponent {
       case "oldest":
         return sorted.sort((a, b) => new Date(a.created) - new Date(b.created));
 
-      case "ending-soon":
-        return sorted.sort((a, b) => new Date(a.endsAt) - new Date(b.endsAt));
+      case "active-auctions":
+        // First filter to only active auctions, then sort by ending soon
+        const activeAuctions = this.filterActiveAuctions(sorted);
+        return activeAuctions.sort(
+          (a, b) => new Date(a.endsAt) - new Date(b.endsAt),
+        );
 
       case "most-bids":
         return sorted.sort(
