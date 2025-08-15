@@ -62,13 +62,13 @@ async function fetchLatestListings(limit = 20) {
   return responseData.data || [];
 }
 
-// Get cards per view based on screen size
+// Get cards per view based on screen size - showing fewer cards for full display
 function getCardsPerView() {
-  if (window.innerWidth < 640) return 4; // mobile
-  if (window.innerWidth < 768) return 2; // sm
-  if (window.innerWidth < 1024) return 3; // md
-  if (window.innerWidth < 1280) return 4; // lg
-  return 5; // xl and up
+  if (window.innerWidth < 640) return 1; // mobile - show 1 full card
+  if (window.innerWidth < 768) return 1; // sm - show 1 full card
+  if (window.innerWidth < 1024) return 2; // md - show 2 full cards
+  if (window.innerWidth < 1280) return 3; // lg - show 3 full cards
+  return 4; // xl and up - show 4 full cards
 }
 
 // Render the carousel
@@ -103,7 +103,7 @@ function renderCarousel(listings) {
   leftBtn.className =
     "p-3 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105 z-10";
   leftBtn.addEventListener("click", () => {
-    currentIndex = Math.max(0, currentIndex - cardsPerView);
+    currentIndex = Math.max(0, currentIndex - 1);
     updateCarousel();
   });
 
@@ -116,14 +116,13 @@ function renderCarousel(listings) {
   rightBtn.className =
     "p-3 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105 z-10";
   rightBtn.addEventListener("click", () => {
-    currentIndex = Math.min(total - cardsPerView, currentIndex + cardsPerView);
+    currentIndex = Math.min(total - cardsPerView, currentIndex + 1);
     updateCarousel();
   });
 
-  // Card area with proper overflow handling
+  // Card area with proper overflow handling - use grid for consistent sizing
   const cardArea = document.createElement("div");
-  cardArea.className =
-    "flex justify-center items-stretch gap-4 flex-1 min-w-0 overflow-hidden px-2";
+  cardArea.className = `grid gap-4 flex-1 min-w-0 overflow-hidden px-2`;
 
   mainArea.appendChild(leftBtn);
   mainArea.appendChild(cardArea);
@@ -143,6 +142,9 @@ function renderCarousel(listings) {
 
   function updateCarousel() {
     cardsPerView = getCardsPerView();
+
+    // Update grid template columns based on cards per view
+    cardArea.style.gridTemplateColumns = `repeat(${cardsPerView}, 1fr)`;
     cardArea.innerHTML = "";
 
     // Update button states
@@ -182,21 +184,53 @@ function renderCarousel(listings) {
       }
     }
 
-    // Add cards to view with proper sizing
+    // Add cards to view - keep original card sizing and ensure images aren't cropped
     for (let i = 0; i < Math.min(cardsPerView, total - currentIndex); i++) {
       const idx = currentIndex + i;
       const card = createListingCard(listings[idx]);
 
-      // Remove width classes and set flex properties
-      card.className = card.className.replace("w-full", "flex-none");
-      card.style.width = `calc((100% - ${(cardsPerView - 1) * 1}rem) / ${cardsPerView})`;
-      card.style.minWidth = "240px";
-      card.style.maxWidth = "300px";
+      // Keep the original card styling - don't resize
+      card.style.width = "auto";
+      card.style.minWidth = "auto";
+      card.style.maxWidth = "none";
+
+      // Find all images in the card and ensure they show full image without cropping
+      const images = card.querySelectorAll("img");
+      images.forEach((img) => {
+        // Remove any object-cover classes that crop images
+        img.classList.remove("object-cover");
+        // Add object-contain to show full image
+        img.classList.add("object-contain");
+        // Ensure proper aspect ratio handling
+        if (!img.style.height && !img.classList.contains("w-full")) {
+          img.style.height = "auto";
+          img.style.maxHeight = "200px"; // Set a reasonable max height
+        }
+      });
+
+      // Also check for any container that might be cropping
+      const imageContainers = card.querySelectorAll(
+        '.aspect-square, .aspect-video, [class*="aspect-"]',
+      );
+      imageContainers.forEach((container) => {
+        // Remove fixed aspect ratios that might crop images
+        container.classList.remove("aspect-square", "aspect-video");
+        // Remove any aspect-* classes
+        Array.from(container.classList).forEach((cls) => {
+          if (cls.startsWith("aspect-")) {
+            container.classList.remove(cls);
+          }
+        });
+        // Add flexible height
+        if (!container.style.height) {
+          container.style.height = "auto";
+        }
+      });
 
       cardArea.appendChild(card);
     }
 
-    // Update thumbnail scrollbar
+    // Update thumbnail scrollbar (keep existing thumbnail logic)
     scrollBar.innerHTML = "";
     for (let i = 0; i < total; i++) {
       const thumb = document.createElement("img");
@@ -227,6 +261,7 @@ function renderCarousel(listings) {
       const middleIndex = Math.floor(cardsPerView / 2);
       const centerCardIndex = currentIndex + middleIndex;
 
+      // For thumbnails, we can keep object-cover since they're small
       thumb.className = `
         w-8 h-8 rounded-full object-cover border-2 cursor-pointer
         transition-all duration-200 flex-shrink-0
@@ -244,13 +279,9 @@ function renderCarousel(listings) {
       });
 
       thumb.addEventListener("click", () => {
-        // Calculate the starting index to center the clicked item
         const middleIndex = Math.floor(cardsPerView / 2);
         let targetIndex = i - middleIndex;
-
-        // Ensure we don't go below 0 or beyond the valid range
         targetIndex = Math.max(0, Math.min(targetIndex, total - cardsPerView));
-
         currentIndex = targetIndex;
         updateCarousel();
       });
