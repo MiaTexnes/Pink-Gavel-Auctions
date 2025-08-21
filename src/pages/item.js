@@ -3,6 +3,13 @@ import {
   getCurrentUser,
   getAuthHeader,
 } from "../library/auth.js";
+import { updateUserCredits } from "../components/header.js";
+import {
+  placeBid,
+  canUserBid,
+  getMinimumBid,
+} from "../services/biddingService.js";
+import { searchAndSortComponent } from "../components/searchAndSort.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -32,8 +39,6 @@ const bidAmountInput = document.getElementById("bid-amount");
 const minBidText = document.getElementById("min-bid-text");
 const ownerActions = document.getElementById("owner-actions");
 const authRequired = document.getElementById("auth-required");
-// Remove this line - it's duplicated later:
-// const deleteListing = document.getElementById("delete-listing-btn");
 
 // Bidding History Elements
 const biddingHistory = document.getElementById("bidding-history");
@@ -43,6 +48,18 @@ const noBids = document.getElementById("no-bids");
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+
+// Edit Modal Elements
+const editModal = document.getElementById("edit-modal");
+const editForm = document.getElementById("edit-listing-form");
+const cancelEditBtn = document.getElementById("cancel-edit-btn");
+const editTitleInput = document.getElementById("edit-title");
+const editDescriptionInput = document.getElementById("edit-description");
+const editMediaInput = document.getElementById("edit-media");
+
+// Additional DOM Elements for tags
+const itemTags = document.getElementById("item-tags");
+const editTagsInput = document.getElementById("edit-tags");
 
 // Global Variables
 let currentListing = null;
@@ -137,6 +154,19 @@ function startCountdown() {
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
+// Helper function to process tags from comma-separated string
+function processTags(tagsString) {
+  if (!tagsString || typeof tagsString !== "string") {
+    return [];
+  }
+
+  return tagsString
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+    .slice(0, 10); // Limit to 10 tags
+}
+
 // Render listing details
 function renderListing(listing) {
   currentListing = listing;
@@ -145,6 +175,11 @@ function renderListing(listing) {
   itemTitle.textContent = listing.title;
   itemDescription.textContent =
     listing.description || "No description provided.";
+
+  // Render tags if they exist
+  if (itemTags) {
+    renderTags(listing.tags || []);
+  }
 
   // Set main image
   if (listing.media && listing.media.length > 0 && listing.media[0].url) {
@@ -167,7 +202,7 @@ function renderListing(listing) {
   sellerAvatar.alt = `${listing.seller?.name || "Unknown"} avatar`;
   sellerName.textContent = listing.seller?.name || "Unknown Seller";
 
-  // Set bid information
+  // Set bid information using the service
   const bids = listing.bids || [];
   const highestBid =
     bids.length > 0 ? Math.max(...bids.map((bid) => bid.amount)) : 0;
@@ -180,8 +215,8 @@ function renderListing(listing) {
   const endDateTime = new Date(listing.endsAt);
   endDate.textContent = `Ends: ${endDateTime.toLocaleDateString()} ${endDateTime.toLocaleTimeString()}`;
 
-  // Set minimum bid
-  const minBid = highestBid + 1;
+  // Set minimum bid using the service
+  const minBid = getMinimumBid(bids);
   bidAmountInput.min = minBid;
   bidAmountInput.placeholder = `Minimum bid: ${minBid}`;
   minBidText.textContent = `Minimum bid: ${minBid} credits`;
@@ -227,6 +262,27 @@ function renderImageGallery(media) {
   gallery.classList.remove("hidden");
 }
 
+// Render tags
+function renderTags(tags) {
+  if (!itemTags) return;
+
+  itemTags.innerHTML = "";
+
+  if (tags.length === 0) {
+    itemTags.innerHTML =
+      '<span class="text-gray-500 dark:text-gray-400 text-sm italic">No tags</span>';
+    return;
+  }
+
+  tags.forEach((tag) => {
+    const tagElement = document.createElement("span");
+    tagElement.className =
+      "inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300 px-2 py-1 rounded-full text-xs font-medium mr-2 mb-1";
+    tagElement.textContent = `#${tag}`;
+    itemTags.appendChild(tagElement);
+  });
+}
+
 // Handle user actions (bidding, owner actions, auth required)
 function handleUserActions(listing, bids) {
   const authenticated = isAuthenticated();
@@ -235,26 +291,26 @@ function handleUserActions(listing, bids) {
     authenticated && currentUser && currentUser.name === listing.seller?.name;
   const timeInfo = formatTimeRemaining(listing.endsAt);
 
-  if (timeInfo.isEnded) {
-    // Auction ended - hide all action sections
-    biddingSection.classList.add("hidden");
-    ownerActions.classList.add("hidden");
-    authRequired.classList.add("hidden");
-  } else if (isOwner) {
-    // User owns this listing
-    biddingSection.classList.add("hidden");
-    authRequired.classList.add("hidden");
-    ownerActions.classList.remove("hidden");
+  if (isOwner) {
+    // User owns this listing - show owner actions regardless of auction status
+    biddingSection?.classList.add("hidden");
+    authRequired?.classList.add("hidden");
+    ownerActions?.classList.remove("hidden");
+  } else if (timeInfo.isEnded) {
+    // Auction ended and user is not owner - hide all action sections
+    biddingSection?.classList.add("hidden");
+    ownerActions?.classList.add("hidden");
+    authRequired?.classList.add("hidden");
   } else if (authenticated) {
-    // Authenticated user can bid
-    authRequired.classList.add("hidden");
-    ownerActions.classList.add("hidden");
-    biddingSection.classList.remove("hidden");
+    // Authenticated user can bid (auction still active)
+    authRequired?.classList.add("hidden");
+    ownerActions?.classList.add("hidden");
+    biddingSection?.classList.remove("hidden");
   } else {
     // Not authenticated
-    biddingSection.classList.add("hidden");
-    ownerActions.classList.add("hidden");
-    authRequired.classList.remove("hidden");
+    biddingSection?.classList.add("hidden");
+    ownerActions?.classList.add("hidden");
+    authRequired?.classList.remove("hidden");
   }
 }
 
@@ -325,6 +381,7 @@ async function fetchListing(id) {
       "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
     };
 
+    // Add auth header if user is authenticated
     if (isAuthenticated()) {
       const authHeader = getAuthHeader();
       headers.Authorization = authHeader.Authorization;
@@ -338,9 +395,6 @@ async function fetchListing(id) {
     );
 
     if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error("Listing not found");
-      }
       const errorData = await response.json();
       throw new Error(
         errorData.errors?.[0]?.message || "Failed to fetch listing",
@@ -349,6 +403,10 @@ async function fetchListing(id) {
 
     const responseData = await response.json();
     const listing = responseData.data;
+
+    if (!listing) {
+      throw new Error("Listing not found");
+    }
 
     renderListing(listing);
     showContent();
@@ -359,43 +417,23 @@ async function fetchListing(id) {
 }
 
 // Place bid
-async function placeBid(amount) {
-  if (!isAuthenticated()) {
-    alert("You must be logged in to place a bid");
-    return;
-  }
-
+async function placeBidOnListing(amount) {
   try {
-    const authHeader = getAuthHeader();
-    const response = await fetch(
-      `${API_BASE}/auction/listings/${currentListing.id}/bids`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
-          Authorization: authHeader.Authorization,
-        },
-        body: JSON.stringify({ amount: parseInt(amount) }),
-      },
-    );
+    const result = await placeBid(currentListing.id, amount);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.errors?.[0]?.message || "Failed to place bid");
+    if (result.success) {
+      // Refresh the listing to show updated bid information
+      await fetchListing(currentListing.id);
+
+      // Show success message
+      alert(result.message || "Bid placed successfully!");
+    } else {
+      // Show error message
+      alert(result.error || "Failed to place bid");
     }
-
-    // Refresh the listing to show updated bids
-    await fetchListing(currentListing.id);
-
-    // Show success message
-    alert("Bid placed successfully!");
-
-    // Clear the bid form
-    bidForm.reset();
   } catch (error) {
     console.error("Error placing bid:", error);
-    alert(error.message);
+    alert("An unexpected error occurred while placing the bid");
   }
 }
 
@@ -435,8 +473,72 @@ async function deleteListing() {
   }
 }
 
+// Edit listing
+async function editListing(updatedData) {
+  if (!isAuthenticated()) {
+    alert("You must be logged in to edit a listing");
+    return;
+  }
+
+  try {
+    const authHeader = getAuthHeader();
+    const response = await fetch(
+      `${API_BASE}/auction/listings/${currentListing.id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+          Authorization: authHeader.Authorization,
+        },
+        body: JSON.stringify(updatedData),
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.errors?.[0]?.message || "Failed to update listing",
+      );
+    }
+
+    // Refresh the listing to show updated data
+    await fetchListing(currentListing.id);
+
+    alert("Listing updated successfully!");
+    editModal.classList.add("hidden");
+  } catch (error) {
+    console.error("Error updating listing:", error);
+    alert(error.message);
+  }
+}
+
+// Populate edit form with current listing data
+function populateEditForm() {
+  if (!currentListing) return;
+
+  editTitleInput.value = currentListing.title || "";
+  editDescriptionInput.value = currentListing.description || "";
+
+  // Convert media array to newline-separated URLs
+  const mediaUrls =
+    currentListing.media?.map((item) => item.url).join("\n") || "";
+  editMediaInput.value = mediaUrls;
+
+  // Convert tags array to comma-separated string
+  if (editTagsInput) {
+    const tagsString = currentListing.tags
+      ? currentListing.tags.join(", ")
+      : "";
+    editTagsInput.value = tagsString;
+  }
+}
+
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize search component for this page
+  searchAndSortComponent.init();
+
   const listingId = getListingId();
 
   if (!listingId) {
@@ -446,28 +548,95 @@ document.addEventListener("DOMContentLoaded", () => {
 
   fetchListing(listingId);
 
-  // Bid form submission
+  // Bid form submission with improved validation
   if (bidForm) {
     bidForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const amount = bidAmountInput.value;
+      const amount = parseInt(bidAmountInput.value);
 
       if (!amount || amount < bidAmountInput.min) {
         alert(`Minimum bid is ${bidAmountInput.min} credits`);
         return;
       }
 
-      await placeBid(amount);
+      // Check if user can bid before attempting
+      const bidCheck = await canUserBid(currentListing);
+      if (!bidCheck.canBid) {
+        alert(bidCheck.reason);
+        return;
+      }
+
+      await placeBidOnListing(amount);
+    });
+  }
+
+  // Edit listing button
+  const editListingBtn = document.getElementById("edit-listing-btn");
+  if (editListingBtn) {
+    editListingBtn.addEventListener("click", () => {
+      populateEditForm();
+      editModal.classList.remove("hidden");
+    });
+  }
+
+  // Edit form submission
+  if (editForm) {
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const title = editTitleInput.value.trim();
+      const description = editDescriptionInput.value.trim();
+      const mediaText = editMediaInput.value.trim();
+      const tagsText = editTagsInput ? editTagsInput.value.trim() : "";
+
+      // Validate required fields
+      if (!title) {
+        alert("Title is required");
+        return;
+      }
+
+      if (!description) {
+        alert("Description is required");
+        return;
+      }
+
+      // Parse media URLs and format as objects
+      const mediaUrls = mediaText
+        .split("\n")
+        .map((url) => url.trim())
+        .filter((url) => url.length > 0)
+        .map((url) => ({
+          url: url,
+          alt: title,
+        }));
+
+      // Process tags
+      const processedTags = processTags(tagsText);
+
+      const updatedData = {
+        title,
+        description,
+        media: mediaUrls,
+        tags: processedTags,
+      };
+
+      await editListing(updatedData);
+    });
+  }
+
+  // Edit modal actions
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", () => {
+      editModal.classList.add("hidden");
     });
   }
 
   // Delete listing button
-  if (deleteListing) {
-    document
-      .getElementById("delete-listing-btn")
-      .addEventListener("click", () => {
-        deleteModal.classList.remove("hidden");
-      });
+  const deleteListingBtn = document.getElementById("delete-listing-btn");
+  if (deleteListingBtn) {
+    deleteListingBtn.addEventListener("click", () => {
+      deleteModal.classList.remove("hidden");
+    });
   }
 
   // Delete modal actions
@@ -484,7 +653,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Close modal when clicking outside
+  // Close modals when clicking outside
   if (deleteModal) {
     deleteModal.addEventListener("click", (e) => {
       if (e.target === deleteModal) {
@@ -492,7 +661,41 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  if (editModal) {
+    editModal.addEventListener("click", (e) => {
+      if (e.target === editModal) {
+        editModal.classList.add("hidden");
+      }
+    });
+  }
+
+  // Add search event listener (updated to handle dropdown navigation)
+  window.addEventListener("searchPerformed", handleSearchResults);
 });
+
+// Update the search results handler
+function handleSearchResults(event) {
+  const { query, results, error } = event.detail;
+
+  console.log("Search results received:", { query, results, error });
+
+  if (error) {
+    console.error("Search error:", error);
+    return;
+  }
+
+  if (query.trim() === "") {
+    return;
+  }
+
+  // For item page, redirect to listings page with search results
+  if (results.length > 0) {
+    window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+  } else {
+    console.log("No search results found for:", query);
+  }
+}
 
 // Cleanup on page unload
 window.addEventListener("beforeunload", () => {

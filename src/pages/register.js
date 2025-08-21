@@ -1,16 +1,23 @@
 import { registerUser } from "../library/auth.js";
+import { createGradientButton } from "../components/buttons.js";
 
 const form = document.getElementById("register-form");
 const errorDiv = document.getElementById("register-error");
 const successDiv = document.getElementById("register-success");
 
 function showError(message) {
+  errorDiv.innerHTML = "";
+  errorDiv.className =
+    "mt-4 bg-red-50 border border-red-200 text-red-700 p-3 rounded-md";
   errorDiv.textContent = message;
   errorDiv.classList.remove("hidden");
   successDiv.classList.add("hidden");
 }
 
 function showSuccess(message) {
+  successDiv.innerHTML = "";
+  successDiv.className =
+    "mt-4 bg-green-50 border border-green-200 text-green-700 p-3 rounded-md";
   successDiv.textContent = message;
   successDiv.classList.remove("hidden");
   errorDiv.classList.add("hidden");
@@ -29,6 +36,16 @@ function toggleLoadingState(button, isLoading) {
   } else {
     button.disabled = false;
     button.textContent = "Register";
+  }
+}
+
+// Initialize the form styling
+function initializeFormStyling() {
+  // Add login button using purple-pink gradient button component
+  const loginContainer = document.getElementById("login-button-container");
+  if (loginContainer) {
+    const loginButton = createGradientButton("Login", "login.html");
+    loginContainer.appendChild(loginButton);
   }
 }
 
@@ -64,5 +81,17 @@ form.addEventListener("submit", async (e) => {
     showError(error.message || "Registration failed. Please try again.");
   } finally {
     toggleLoadingState(submitButton, false);
+  }
+});
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", () => {
+  if (form) {
+    initializeFormStyling();
+
+    const nameField = document.getElementById("name");
+    if (nameField && nameField.value === "") {
+      nameField.focus();
+    }
   }
 });

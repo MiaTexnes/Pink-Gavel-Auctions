@@ -3,6 +3,7 @@ import {
   getCurrentUser,
   logoutUser,
 } from "../library/auth.js";
+import { createListingCard } from "./allListings.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const profileContainer = document.getElementById("profile-content");
@@ -62,32 +63,8 @@ function renderProfileView(profile) {
         ? `
       <div class="mb-6">
         <h3 class="text-xl font-semibold mb-4">Your Listings</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${profile.listings
-            .map(
-              (listing) => `
-            <a href="/item.html?id=${
-              listing.id
-            }" class="block bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-              ${
-                listing.media &&
-                listing.media.length > 0 &&
-                listing.media[0].url
-                  ? `<img src="${listing.media[0].url}" alt="${listing.title}" class="w-full h-40 object-cover" onerror="this.outerHTML='<div class=\\'w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic\\'>No image on this listing</div>'">`
-                  : `<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic">No image on this listing</div>`
-              }
-              <div class="p-4">
-                <h4 class="text-lg font-semibold mb-1 truncate">${
-                  listing.title
-                }</h4>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Ends: ${new Date(
-                  listing.endsAt,
-                ).toLocaleDateString()}</p>
-              </div>
-            </a>
-          `,
-            )
-            .join("")}
+        <div id="user-listings-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <!-- Listings will be inserted here by JavaScript -->
         </div>
       </div>
     `
@@ -133,6 +110,18 @@ function renderProfileView(profile) {
       </div>
     </div>
   `;
+
+  // Render user listings using the reusable card function
+  if (profile.listings && profile.listings.length > 0) {
+    const userListingsContainer = document.getElementById(
+      "user-listings-container",
+    );
+    if (userListingsContainer) {
+      profile.listings.forEach((listing) => {
+        userListingsContainer.appendChild(createListingCard(listing));
+      });
+    }
+  }
 
   document
     .getElementById("editProfileBtn")
