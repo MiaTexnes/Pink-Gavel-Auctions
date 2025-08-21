@@ -12,7 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
-        style: "src/style.css",
+        style: "src/css/style.css",
       },
     },
   },
