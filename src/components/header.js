@@ -46,7 +46,7 @@ function renderHeader() {
   return `
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
       <div class=" mx-2 px-4">
-        <div class="flex justify-evenly items-center py-4">
+        <div class="flex justify-between items-center py-4">
           <!-- Left Side: Logo and Navigation -->
           <div class="flex items-center space-x-6">
             <!-- Logo -->
@@ -58,7 +58,7 @@ function renderHeader() {
             </div>
 
             <!-- Navigation Links -->
-            <div class="hidden md:flex items-center space-x-6">
+            <div class="md:flex items-center space-x-6">
               <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Home</a>
               <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Auctions</a>
               ${
