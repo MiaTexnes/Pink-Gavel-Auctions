@@ -58,7 +58,7 @@ function renderHeader() {
             </div>
 
             <!-- Navigation Links -->
-            <div class="md:flex items-center space-x-6">
+            <div class="hidden md:flex items-center space-x-6">
               <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Home</a>
               <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Auctions</a>
               ${
@@ -94,10 +94,6 @@ function renderHeader() {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>
-              </div>
-              <!-- Header Search Dropdown -->
-              <div id="header-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-                <!-- Search results will be populated here -->
               </div>
             </div>
 
@@ -163,10 +159,6 @@ function renderHeader() {
                 placeholder="Search auctions..."
                 class="px-4 py-2 pr-10 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-pink-500"
               >
-              <!-- Mobile Search Dropdown -->
-              <div id="mobile-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
-                <!-- Search results will be populated here -->
-              </div>
             </div>
 
             <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Home</a>
