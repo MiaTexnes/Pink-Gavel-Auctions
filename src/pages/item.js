@@ -57,6 +57,10 @@ const editTitleInput = document.getElementById("edit-title");
 const editDescriptionInput = document.getElementById("edit-description");
 const editMediaInput = document.getElementById("edit-media");
 
+// Additional DOM Elements for tags
+const itemTags = document.getElementById("item-tags");
+const editTagsInput = document.getElementById("edit-tags");
+
 // Global Variables
 let currentListing = null;
 let countdownInterval = null;
@@ -150,6 +154,19 @@ function startCountdown() {
   countdownInterval = setInterval(updateCountdown, 1000);
 }
 
+// Helper function to process tags from comma-separated string
+function processTags(tagsString) {
+  if (!tagsString || typeof tagsString !== "string") {
+    return [];
+  }
+
+  return tagsString
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+    .slice(0, 10); // Limit to 10 tags
+}
+
 // Render listing details
 function renderListing(listing) {
   currentListing = listing;
@@ -158,6 +175,11 @@ function renderListing(listing) {
   itemTitle.textContent = listing.title;
   itemDescription.textContent =
     listing.description || "No description provided.";
+
+  // Render tags if they exist
+  if (itemTags) {
+    renderTags(listing.tags || []);
+  }
 
   // Set main image
   if (listing.media && listing.media.length > 0 && listing.media[0].url) {
@@ -238,6 +260,27 @@ function renderImageGallery(media) {
   });
 
   gallery.classList.remove("hidden");
+}
+
+// Render tags
+function renderTags(tags) {
+  if (!itemTags) return;
+
+  itemTags.innerHTML = "";
+
+  if (tags.length === 0) {
+    itemTags.innerHTML =
+      '<span class="text-gray-500 dark:text-gray-400 text-sm italic">No tags</span>';
+    return;
+  }
+
+  tags.forEach((tag) => {
+    const tagElement = document.createElement("span");
+    tagElement.className =
+      "inline-block bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300 px-2 py-1 rounded-full text-xs font-medium mr-2 mb-1";
+    tagElement.textContent = `#${tag}`;
+    itemTags.appendChild(tagElement);
+  });
 }
 
 // Handle user actions (bidding, owner actions, auth required)
@@ -481,6 +524,14 @@ function populateEditForm() {
   const mediaUrls =
     currentListing.media?.map((item) => item.url).join("\n") || "";
   editMediaInput.value = mediaUrls;
+
+  // Convert tags array to comma-separated string
+  if (editTagsInput) {
+    const tagsString = currentListing.tags
+      ? currentListing.tags.join(", ")
+      : "";
+    editTagsInput.value = tagsString;
+  }
 }
 
 // Event Listeners
@@ -536,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const title = editTitleInput.value.trim();
       const description = editDescriptionInput.value.trim();
       const mediaText = editMediaInput.value.trim();
+      const tagsText = editTagsInput ? editTagsInput.value.trim() : "";
 
       // Validate required fields
       if (!title) {
@@ -555,13 +607,17 @@ document.addEventListener("DOMContentLoaded", () => {
         .filter((url) => url.length > 0)
         .map((url) => ({
           url: url,
-          alt: title, // Use the title as alt text, or you could make this more specific
+          alt: title,
         }));
+
+      // Process tags
+      const processedTags = processTags(tagsText);
 
       const updatedData = {
         title,
         description,
         media: mediaUrls,
+        tags: processedTags,
       };
 
       await editListing(updatedData);

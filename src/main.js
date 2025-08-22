@@ -7,6 +7,7 @@ import {
   renderCarousel,
   setupCarouselScrollButtons,
 } from "./components/carousel.js";
+import { initializeFooter } from "./components/footer.js";
 
 // Initialize dark mode for the whole page
 initDarkMode();
@@ -136,6 +137,8 @@ function initializePage() {
 
   // Initialize header using the named export function
   initializeHeader();
+
+  initializeFooter();
 
   // Add padding to main content to account for fixed header
   const main = document.querySelector("main");

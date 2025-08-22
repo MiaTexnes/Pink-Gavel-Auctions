@@ -72,43 +72,49 @@ export function createListingCard(listing) {
 
   const card = document.createElement("a");
   card.href = `/item.html?id=${listing.id}`;
+  // Fixed card dimensions with consistent height
   card.className =
-    "block bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden h-[420px] w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 border border-gray-100 dark:border-gray-700";
+    "block bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 border border-gray-100 dark:border-gray-700";
 
-  // Template with fixed sizing
+  // Set fixed height using inline style to ensure consistency
+  card.style.height = "420px";
+  card.style.minHeight = "420px";
+  card.style.maxHeight = "420px";
+
+  // Template with absolutely fixed sizing - ensuring all cards are identical
   card.innerHTML = `
     ${
       imageUrl
-        ? `<div class="w-full h-40 flex-shrink-0 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-            <img src="${imageUrl}" alt="${listing.title}" class="w-full h-full object-cover listing-image transition-transform duration-300 hover:scale-110">
+        ? `<div class="w-full flex-shrink-0 bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center" style="height: 192px; min-height: 192px; max-height: 192px;">
+            <img src="${imageUrl}" alt="${listing.title}" class="w-full h-full object-contain listing-image transition-transform duration-300 hover:scale-105" style="max-width: 100%; max-height: 100%;">
            </div>`
-        : `<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600">
+        : `<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: 192px; min-height: 192px; max-height: 192px;">
             No image on this listing
            </div>`
     }
-    <div class="p-4 flex-1 flex flex-col min-h-0">
-      <h2 class="text-xl font-semibold mb-2 line-clamp-2 min-h-[3.5rem] text-gray-900 dark:text-white transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400">${listing.title}</h2>
-      <p class="text-gray-700 dark:text-gray-300 text-sm mb-3 line-clamp-3 flex-1 min-h-[4.5rem] transition-colors duration-200">${
+    <div class="p-4 flex-1 flex flex-col min-h-0" style="height: 228px; min-height: 228px; max-height: 228px;">
+      <h2 class="text-lg font-semibold mb-2 line-clamp-2 text-gray-900 dark:text-white transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400" style="height: 48px; min-height: 48px; max-height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${listing.title}</h2>
+      <p class="text-gray-700 dark:text-gray-300 text-sm mb-3 flex-1 overflow-hidden transition-colors duration-200" style="height: 64px; min-height: 64px; max-height: 64px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${
         listing.description || "No description provided."
       }</p>
-      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0">
-        <span class="font-medium ${timeLeftMs < 0 ? "text-red-500 dark:text-red-400" : timeLeftMs < 24 * 60 * 60 * 1000 ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"} transition-colors duration-200">${timeLeftString}</span>
-        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105">Bids: ${listing._count?.bids || 0}</span>
+      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
+        <span class="font-medium ${timeLeftMs < 0 ? "text-red-500 dark:text-red-400" : timeLeftMs < 24 * 60 * 60 * 1000 ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"} transition-colors duration-200 truncate" style="max-width: 60%;">${timeLeftString}</span>
+        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105 flex-shrink-0">Bids: ${listing._count?.bids || 0}</span>
       </div>
-      <div class="flex items-center space-x-2 flex-shrink-0 transition-all duration-200 hover:translate-x-1">
-        <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0">
-        <span class="text-gray-800 dark:text-gray-200 font-medium truncate transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400">${sellerName}</span>
+      <div class="flex items-center space-x-2 flex-shrink-0 transition-all duration-200 hover:translate-x-1" style="height: 32px; min-height: 32px; max-height: 32px;">
+        <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
+        <span class="text-gray-800 dark:text-gray-200 font-medium truncate transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400 min-w-0" style="max-width: calc(100% - 40px);">${sellerName}</span>
       </div>
     </div>
   `;
 
-  // Handle image error with JavaScript instead of inline HTML
+  // Handle image error with JavaScript
   if (imageUrl) {
     const img = card.querySelector(".listing-image");
     if (img) {
       img.addEventListener("error", function () {
         this.parentElement.outerHTML =
-          '<div class="w-full h-40 flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600">No image on this listing</div>';
+          '<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: 192px; min-height: 192px; max-height: 192px;">No image on this listing</div>';
       });
     }
   }
@@ -674,13 +680,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const title = document.getElementById("listingTitle").value.trim();
       const description = document.getElementById("listingDesc").value.trim();
       const endsAt = document.getElementById("listingEndDate").value;
+      const tags = document.getElementById("listingTags")
+        ? document.getElementById("listingTags").value.trim()
+        : "";
 
       try {
         await createListing({
           title,
           description,
           endsAt,
-          media: selectedMediaUrls, // Use selectedMediaUrls instead of collectMediaUrls()
+          media: selectedMediaUrls,
+          tags: tags, // Pass tags string to createListing function
         });
         closeAddListing();
         fetchAllListings();
@@ -697,3 +707,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Helper function to process tags from comma-separated string
+function processTags(tagsString) {
+  if (!tagsString || typeof tagsString !== "string") {
+    return [];
+  }
+
+  return tagsString
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+    .slice(0, 10); // Limit to 10 tags
+}

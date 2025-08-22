@@ -199,6 +199,16 @@
                 Login to Bid
               </a>
             </div>
+
+            <!-- Tags Section -->
+            <div class="mb-4">
+              <h3
+                class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Tags:
+              </h3>
+              <div id="item-tags"></div>
+            </div>
           </div>
         </div>
 
@@ -301,6 +311,24 @@
               rows="3"
               placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
             ></textarea>
+          </div>
+          <div class="mb-4">
+            <label
+              for="edit-tags"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Tags (comma-separated)
+            </label>
+            <input
+              type="text"
+              id="edit-tags"
+              name="tags"
+              placeholder="e.g., electronics, vintage, collectible"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 dark:bg-gray-800 dark:text-white"
+            />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Add up to 10 tags separated by commas
+            </p>
           </div>
           <div class="flex justify-end space-x-3">
             <button
