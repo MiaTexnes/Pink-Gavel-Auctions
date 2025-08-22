@@ -2,8 +2,12 @@ import { initDarkMode, toggleDarkMode } from "./components/darkLight.js";
 import { initializeHeader } from "./components/header.js"; // Changed this import
 import { isAuthenticated, logoutUser } from "./library/auth.js";
 import { createGradientButton } from "./components/buttons.js";
-import { renderCarousel } from "./pages/index.js";
 import { loginUser } from "./library/auth.js";
+import {
+  renderCarousel,
+  setupCarouselScrollButtons,
+} from "./components/carousel.js";
+import { initializeFooter } from "./components/footer.js";
 
 // Initialize dark mode for the whole page
 initDarkMode();
@@ -133,6 +137,8 @@ function initializePage() {
 
   // Initialize header using the named export function
   initializeHeader();
+
+  initializeFooter();
 
   // Add padding to main content to account for fixed header
   const main = document.querySelector("main");

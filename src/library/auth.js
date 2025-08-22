@@ -67,6 +67,11 @@ export async function registerUser(userData) {
     throw new Error("Invalid email format");
   }
 
+  // Validate Noroff domain requirement
+  if (!userData.email.endsWith("stud.noroff.no")) {
+    throw new Error("Email must be a valid stud.noroff.no address");
+  }
+
   // Validate password length
   if (userData.password.length < 8) {
     throw new Error("Password must be at least 8 characters long");
