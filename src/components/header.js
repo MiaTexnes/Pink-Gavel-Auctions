@@ -1,47 +1,78 @@
 import {
-  isAuthenticated,
-  getCurrentUser,
-  logoutUser,
-  getUserProfile,
+  isAuthenticated, // Checks if the user is authenticated
+  getCurrentUser, // Retrieves the current user's details
+  logoutUser, // Logs out the user
+  getUserProfile, // Fetches the user's profile details
 } from "../library/auth.js";
-import { searchAndSortComponent } from "./searchAndSort.js";
 
-// Global variable to store current credits
+import { searchAndSortComponent } from "./searchAndSort.js"; // Handles search and sort functionality
+
+// Global variable to store the user's credits
 let userCredits = null;
 
-// Function to update credits display
+/**
+ * Updates the display of user credits in both desktop and mobile views.
+ * Fetches the user's profile to retrieve the current credit balance.
+ */
 async function updateCreditsDisplay() {
-  const creditsElement = document.getElementById("user-credits");
-  if (!creditsElement) return;
+  const creditsElement = document.getElementById("user-credits"); // Desktop credits display
+  const mobileCreditsElement = document.getElementById("mobile-user-credits"); // Mobile credits display
 
+  // If neither element exists, exit the function
+  if (!creditsElement && !mobileCreditsElement) return;
+
+  // Check if the user is authenticated
   if (isAuthenticated()) {
-    const currentUser = getCurrentUser();
+    const currentUser = getCurrentUser(); // Get the current user's details
     if (currentUser) {
       try {
+        // Fetch the user's profile
         const profile = await getUserProfile(currentUser.name);
         if (profile && typeof profile.credits === "number") {
-          userCredits = profile.credits;
-          creditsElement.textContent = `${profile.credits} credits`;
-          creditsElement.classList.remove("hidden");
+          userCredits = profile.credits; // Update the global credits variable
+
+          // Update desktop credits display
+          if (creditsElement) {
+            creditsElement.textContent = `${profile.credits} credits`;
+            creditsElement.classList.remove("hidden");
+          }
+
+          // Update mobile credits display
+          if (mobileCreditsElement) {
+            mobileCreditsElement.textContent = `${profile.credits} credits`;
+            mobileCreditsElement.classList.remove("hidden");
+          }
         }
       } catch (error) {
         console.error("Error updating credits:", error);
-        creditsElement.classList.add("hidden");
+
+        // Hide credits display in case of an error
+        if (creditsElement) creditsElement.classList.add("hidden");
+        if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
       }
     }
   } else {
-    creditsElement.classList.add("hidden");
+    // Hide credits display if the user is not authenticated
+    if (creditsElement) creditsElement.classList.add("hidden");
+    if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
   }
 }
 
-// Export this function so other modules can call it
+/**
+ * Exports a function to allow other modules to trigger the credits update.
+ */
 export async function updateUserCredits() {
   await updateCreditsDisplay();
 }
 
+/**
+ * Renders the HTML structure of the header, including navigation links,
+ * user actions, and the mobile menu.
+ * @returns {string} The HTML string for the header.
+ */
 function renderHeader() {
-  const authenticated = isAuthenticated();
-  const currentUser = authenticated ? getCurrentUser() : null;
+  const authenticated = isAuthenticated(); // Check if the user is authenticated
+  const currentUser = authenticated ? getCurrentUser() : null; // Get current user details if authenticated
 
   return `
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
@@ -101,8 +132,11 @@ function renderHeader() {
             ${
               authenticated
                 ? `
-              <div id="user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
-                Loading...
+              <div class="flex items-center space-x-3">
+                <span class="text-gray-700 dark:text-gray-300">Hello, ${currentUser.name}</span>
+                <div id="user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                  Loading...
+                </div>
               </div>
             `
                 : ""
@@ -167,9 +201,15 @@ function renderHeader() {
               authenticated
                 ? `
               <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Profile</a>
-              <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+              <div class="pt-2 border-t border-gray-200 dark:border-gray-600 flex items-center space-x-2">
                 <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+                <div id="mobile-user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                  Loading...
+                </div>
               </div>
+              <button id="logout-btn-mobile" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                Logout
+              </button>
             `
                 : `
               <div class="flex flex-col space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
@@ -185,6 +225,10 @@ function renderHeader() {
   `;
 }
 
+/**
+ * Sets up event listeners for various header elements, such as the mobile menu toggle,
+ * search functionality, and logout buttons.
+ */
 function setupEventListeners() {
   console.log("Setting up header event listeners...");
 
@@ -259,45 +303,44 @@ function setupEventListeners() {
     });
   }
 
-  // Initialize search and sort component
-  console.log("Initializing search and sort component...");
-  try {
-    searchAndSortComponent.init();
-    console.log("✅ Search and sort component initialized successfully");
-  } catch (error) {
-    console.error("❌ Failed to initialize search and sort component:", error);
+  // Logout functionality for mobile button
+  const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+  if (logoutBtnMobile) {
+    logoutBtnMobile.addEventListener("click", (e) => {
+      e.preventDefault();
+      logoutUser();
+    });
   }
 }
 
-// Initialize header
+/**
+ * Initializes the header by rendering its HTML, setting up event listeners,
+ * and initializing the search and sort component.
+ */
 export function initializeHeader() {
   console.log("Initializing header...");
   const headerElement = document.querySelector("header");
   if (headerElement) {
     headerElement.innerHTML = renderHeader();
-
-    // Setup event listeners immediately after rendering
     setupEventListeners();
+    updateCreditsDisplay(); // Ensure credits are updated on header initialization
 
-    // Update credits display if user is logged in
-    if (isAuthenticated()) {
-      updateCreditsDisplay();
+    // Initialize the search and sort component
+    try {
+      searchAndSortComponent.init();
+      console.log("✅ Search and sort component initialized successfully");
+    } catch (error) {
+      console.error(
+        "❌ Failed to initialize search and sort component:",
+        error,
+      );
     }
+
+    console.log("Header initialized successfully");
   } else {
-    console.error("❌ Header element not found in DOM");
+    console.error("Header element not found");
   }
 }
 
-// Auto-initialize when the script loads
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM Content Loaded - initializing header");
-  initializeHeader();
-});
-
-// Listen for storage changes to update header when login state changes
-window.addEventListener("storage", (e) => {
-  if (e.key === "accessToken" || e.key === "user") {
-    console.log("Auth state changed, reinitializing header");
-    initializeHeader();
-  }
-});
+// Call initializeHeader on script load
+initializeHeader();

@@ -102,6 +102,7 @@ function renderCarousel(listings) {
   `;
   leftBtn.className =
     "p-3 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105 z-10";
+  leftBtn.setAttribute("aria-label", "Scroll carousel left"); // Added ARIA label
   leftBtn.addEventListener("click", () => {
     currentIndex = Math.max(0, currentIndex - 1);
     updateCarousel();
@@ -115,6 +116,7 @@ function renderCarousel(listings) {
   `;
   rightBtn.className =
     "p-3 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex-shrink-0 transform hover:scale-105 z-10";
+  rightBtn.setAttribute("aria-label", "Scroll carousel right"); // Added ARIA label
   rightBtn.addEventListener("click", () => {
     currentIndex = Math.min(total - cardsPerView, currentIndex + 1);
     updateCarousel();
