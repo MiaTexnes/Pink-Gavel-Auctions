@@ -5,7 +5,6 @@ import {
   getUserProfile,
 } from "../library/auth.js";
 import { searchAndSortComponent } from "./searchAndSort.js";
-import logo from "../assets/images/logo.png";
 
 // Global variable to store current credits
 let userCredits = null;
@@ -57,7 +56,7 @@ function renderHeader() {
 
   return `
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
-            <div class="container mx-auto px-4">
+      <div class="container mx-auto px-4">
         <div class="flex justify-between items-center py-4">
 
           <!-- Left Side: Logo and Navigation -->
@@ -65,7 +64,7 @@ function renderHeader() {
             <!-- Logo -->
             <div class="flex items-center space-x-3">
               <a href="/index.html" class="flex items-center space-x-2">
-                <img src="${logo}" alt="Logo of a Pink Gavel" class="h-8 w-8">
+                <img src="./assets/images/logo.png" alt="Logo of a Pink Gavel" class="h-8 w-8">
                 <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
               </a>
             </div>
