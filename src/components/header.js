@@ -56,8 +56,9 @@ function renderHeader() {
 
   return `
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
-      <div class="mx-2 px-4">
+            <div class="container mx-auto px-4">
         <div class="flex justify-between items-center py-4">
+
           <!-- Left Side: Logo and Navigation -->
           <div class="flex items-center space-x-6">
             <!-- Logo -->
