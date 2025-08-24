@@ -145,19 +145,12 @@ function renderHeader() {
               >
             </div>
 
-            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Home</a>
-            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Auctions</a>
+            <!-- Mobile Top Section: Hello, Credits, and Dark Mode -->
             ${
               authenticated
                 ? `
-              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Profile</a>
-              <div class="pt-2 border-t border-gray-200 dark:border-gray-600 flex items-center space-x-2">
+              <div class="flex justify-center items-center space-x-4">
                 <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
-                <div id="mobile-user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
-                  Loading...
-                </div>
-              </div>
-              <div class="pt-2 border-t border-gray-200 dark:border-gray-600 flex flex-col space-y-3"> <!-- Added flex-col and space-y-3 -->
                 <div id="user-credits" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
                   Loading...
                 </div>
@@ -171,16 +164,24 @@ function renderHeader() {
                     <path class="dark:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 </button>
-                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
-                  Logout
-                </button>
               </div>
             `
+                : ""
+            }
+
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Home</a>
+            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Auctions</a>
+            ${
+              authenticated
+                ? `
+              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Profile</a>
+              <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                Logout
+              </button>
+            `
                 : `
-              <div class="flex flex-col space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Login</a>
-                <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
-              </div>
+              <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Login</a>
+              <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
             `
             }
           </div>
