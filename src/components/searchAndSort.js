@@ -44,8 +44,6 @@ export class SearchAndSortComponent {
    * Create a dropdown container for a search input
    */
   createDropdown(searchInput, dropdownId) {
-    const searchContainer = searchInput.parentElement;
-
     // Check if dropdown already exists
     if (document.getElementById(dropdownId)) {
       return;
@@ -53,11 +51,54 @@ export class SearchAndSortComponent {
 
     const dropdown = document.createElement("div");
     dropdown.id = dropdownId;
-    dropdown.className =
-      "absolute top-full w-full mt-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 hidden max-h-80 overflow-y-auto";
 
-    searchContainer.style.position = "relative";
-    searchContainer.appendChild(dropdown);
+    if (dropdownId === "header-search-dropdown") {
+      // For header search, find the outer container that has responsive classes
+      let searchContainer = searchInput.parentElement;
+
+      // Look for the container with "hidden md:flex" classes
+      while (
+        searchContainer &&
+        !searchContainer.classList.contains("md:flex")
+      ) {
+        searchContainer = searchContainer.parentElement;
+        // Safety check to avoid infinite loop
+        if (searchContainer === document.body) {
+          searchContainer = null;
+          break;
+        }
+      }
+
+      if (searchContainer && searchContainer.classList.contains("md:flex")) {
+        // Position the dropdown relative to the outer container
+        dropdown.className =
+          "absolute left-0 mt-21 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
+
+        searchContainer.style.position = "relative";
+        searchContainer.appendChild(dropdown);
+      } else {
+        // Fallback: use fixed positioning
+        dropdown.className =
+          "fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
+
+        document.body.appendChild(dropdown);
+
+        // Store position update function
+        dropdown._updatePosition = () => {
+          const rect = searchInput.getBoundingClientRect();
+          dropdown.style.top = `${rect.bottom + 8}px`;
+          dropdown.style.left = `${rect.left}px`;
+        };
+      }
+    } else {
+      // Mobile search positioning remains the same
+      dropdown.className =
+        "absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto";
+
+      const searchContainer = searchInput.parentElement;
+      searchContainer.style.position = "relative";
+      searchContainer.appendChild(dropdown);
+    }
   }
 
   /**
@@ -254,7 +295,7 @@ export class SearchAndSortComponent {
     try {
       const results = await this.searchAPI(query);
       const sortedResults = this.sortListings(results, "newest");
-      const limitedResults = sortedResults.slice(0, 5); // Show only 5 results
+      const limitedResults = sortedResults.slice(0, 3); // Show only 5 results
 
       this.showDropdown(searchInput, query, limitedResults, results.length);
     } catch (error) {
@@ -273,6 +314,11 @@ export class SearchAndSortComponent {
     const dropdown = document.getElementById(dropdownId);
 
     if (!dropdown) return;
+
+    // Update position for fixed positioned dropdowns
+    if (dropdown._updatePosition) {
+      dropdown._updatePosition();
+    }
 
     if (results.length === 0) {
       dropdown.innerHTML = `
