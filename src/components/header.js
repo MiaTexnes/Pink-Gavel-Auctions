@@ -63,7 +63,7 @@ function renderHeader() {
             <!-- Logo -->
             <div class="flex items-center space-x-3">
               <a href="/index.html" class="flex items-center space-x-2">
-                <img src="assets/images/logo.png" alt="Logo of a Pink Gavel" class="h-8 w-8">
+                <img src="./assets/images/logo.png" alt="Logo of a Pink Gavel" class="h-8 w-8">
                 <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
               </a>
             </div>
