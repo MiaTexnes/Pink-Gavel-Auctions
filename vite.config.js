@@ -9,12 +9,13 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     minify: true,
-    rollupOptions: {
-      input: {
-        main: "index.html",
-        style: "src/css/style.css",
-      },
-    },
+    // Remove the entire rollupOptions.input section
+    // rollupOptions: {
+    //   input: {
+    //     main: "index.html",
+    //     style: "src/css/style.css",
+    //   },
+    // },
   },
   css: {
     postcss: "./postcss.config.js",
