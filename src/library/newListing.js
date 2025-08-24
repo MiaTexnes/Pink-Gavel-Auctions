@@ -1,6 +1,36 @@
 // newListing.js
+
+// Helper function to validate URL format
+function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+// Helper function to process tags from comma-separated string
+function processTags(tagsString) {
+  if (!tagsString || typeof tagsString !== "string") {
+    return [];
+  }
+
+  return tagsString
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0)
+    .slice(0, 10); // Limit to 10 tags to prevent abuse
+}
+
 // Function to create a new listing via the API
-export async function createListing({ title, description, endsAt, media }) {
+export async function createListing({
+  title,
+  description,
+  endsAt,
+  media,
+  tags,
+}) {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("You must be logged in to create a listing.");
 
@@ -41,6 +71,9 @@ export async function createListing({ title, description, endsAt, media }) {
       });
   }
 
+  // Process tags
+  const processedTags = processTags(tags);
+
   // Ensure endsAt is in ISO 8601 format
   const formattedEndsAt = new Date(endsAt).toISOString();
 
@@ -49,6 +82,7 @@ export async function createListing({ title, description, endsAt, media }) {
     description: description.trim(),
     endsAt: formattedEndsAt,
     media: formattedMedia,
+    tags: processedTags,
   };
 
   console.log("Sending request body:", requestBody);
@@ -88,15 +122,5 @@ export async function createListing({ title, description, endsAt, media }) {
       throw new Error("Network error. Please check your internet connection.");
     }
     throw error;
-  }
-}
-
-// Helper function to validate URLs
-function isValidUrl(string) {
-  try {
-    new URL(string);
-    return true;
-  } catch (_) {
-    return false;
   }
 }

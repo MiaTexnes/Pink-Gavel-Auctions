@@ -1,347 +1,311 @@
-import { isAuthenticated, logoutUser } from "../library/auth.js";
-import { toggleDarkMode, initDarkMode } from "./darkLight.js";
-import { createGradientButton } from "./buttons.js";
+import {
+  isAuthenticated,
+  getCurrentUser,
+  logoutUser,
+  getUserProfile,
+} from "../library/auth.js";
+import { searchAndSortComponent } from "./searchAndSort.js";
 
-// Header configuration
-const HEADER_CONFIG = {
-  BREAKPOINT: 768, // md breakpoint in Tailwind
-  NAV_LINKS: [
-    { text: "HOME", href: "/" },
-    { text: "PROFILE", href: "/profile.html" },
-    { text: "LISTINGS", href: "/allListings.html" },
-    { text: "REGISTER", href: "/register.html" },
-    { text: "LOGIN", href: "/login.html" },
-    // { text: 'LOGOUT', href: '#' } when logged in the login becomes logout
-  ],
-};
+// Global variable to store current credits
+let userCredits = null;
 
-class Header {
-  constructor() {
-    // Only create one instance
-    if (window.headerInstance) {
-      return window.headerInstance;
+// Function to update credits display
+async function updateCreditsDisplay() {
+  const creditsElement = document.getElementById("user-credits");
+  if (!creditsElement) return;
+
+  if (isAuthenticated()) {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      try {
+        const profile = await getUserProfile(currentUser.name);
+        if (profile && typeof profile.credits === "number") {
+          userCredits = profile.credits;
+          creditsElement.textContent = `${profile.credits} credits`;
+          creditsElement.classList.remove("hidden");
+        }
+      } catch (error) {
+        console.error("Error updating credits:", error);
+        creditsElement.classList.add("hidden");
+      }
     }
-    window.headerInstance = this;
-
-    this.header = document.querySelector("header");
-    if (!this.header) {
-      throw new Error("Header element not found");
-    }
-
-    this.menuButton = null;
-    this.mobileMenu = null;
-    this.navLinksList = null;
-    this.resizeHandler = this.handleResize.bind(this);
-    this.clickHandler = this.handleOutsideClick.bind(this);
+  } else {
+    creditsElement.classList.add("hidden");
   }
+}
 
-  createNavigationLink(link) {
-    const li = document.createElement("li");
-    const a = document.createElement("a");
-    a.href = link.href;
-    a.textContent = link.text;
-    a.className =
-      "block w-full text-gray-800 hover:text-primary hover:bg-pink-200 dark:text-gray-300 dark:hover:text-white dark:hover:bg-pink-900 px-3 py-2 rounded-lg transition-all duration-200 font-semibold";
+// Export this function so other modules can call it
+export async function updateUserCredits() {
+  await updateCreditsDisplay();
+}
 
-    const currentPage = window.location.pathname;
-    if (currentPage === link.href) {
-      a.classList.add(
-        "text-black",
-        "dark:text-[#e157b1]",
-        "bg-pink-200",
-        "dark:bg-pink-900",
-      );
-    }
+function renderHeader() {
+  const authenticated = isAuthenticated();
+  const currentUser = authenticated ? getCurrentUser() : null;
 
-    li.appendChild(a);
-    return li;
-  }
+  return `
+    <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
+      <div class=" mx-2 px-4">
+        <div class="flex justify-evenly items-center py-4">
+          <!-- Left Side: Logo and Navigation -->
+          <div class="flex items-center space-x-6">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+              <a href="/index.html" class="flex items-center space-x-2">
+                <img src="/assets/images/logo.png" alt="Pink Gavel Auctions" class="h-8 w-8">
+                <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
+              </a>
+            </div>
 
-  createLogoutButton(isMobile = false) {
-    const logoutBtn = document.createElement("button");
-    logoutBtn.textContent = "LOGOUT";
-    logoutBtn.className = isMobile
-      ? "block w-full text-center py-2 rounded-full text-primary font-semibold bg-transparent border-none hover:bg-pink-50"
-      : "ml-2 px-4 py-2 rounded-full text-primary font-semibold bg-transparent border-none hover:underline";
-    logoutBtn.style.cursor = "pointer";
-    logoutBtn.addEventListener("click", () => {
-      logoutUser();
-    });
-    return logoutBtn;
-  }
+            <!-- Navigation Links -->
+            <div class="hidden md:flex items-center space-x-6">
+              <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Home</a>
+              <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Auctions</a>
+              ${
+                authenticated
+                  ? `
+                <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Profile</a>
+              `
+                  : ""
+              }
+            </div>
+          </div>
 
-  createMobileMenu() {
-    this.mobileMenu = document.createElement("div");
-    this.mobileMenu.className =
-      "hidden md:hidden w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg mt-2 pl-15";
-    this.mobileMenu.setAttribute("aria-hidden", "true");
+          <!-- Right Side Actions -->
+          <div class="flex items-center space-x-4">
+            <!-- Search Bar with attached button -->
+            <div class="hidden md:flex items-center">
+              <!-- Search input with attached button -->
+              <div class="flex items-center">
+                <input
+                  type="text"
+                  id="header-search"
+                  placeholder="Search auctions..."
+                  class="px-3 py-2 w-38 text-sm border border-r-0 border-gray-300 dark:border-gray-600 rounded-l-md bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-pink-500 focus:border-pink-500 transition-all duration-200"
+                >
+                <!-- Search icon button -->
+                <button
+                  id="header-search-btn"
+                  type="button"
+                  class="px-3 py-2 dark:bg-gray-600 border border-l-0 dark:border-gray-600 rounded-r-md hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-600 dark:text-gray-300 transition-colors"
+                  aria-label="Search"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Header Search Dropdown -->
+              <div id="header-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <!-- Search results will be populated here -->
+              </div>
+            </div>
 
-    const mobileMenuList = document.createElement("ul");
-    mobileMenuList.className = "py-2";
+            <!-- Credits Display (only when logged in) -->
+            ${
+              authenticated
+                ? `
+              <div id="user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                Loading...
+              </div>
+            `
+                : ""
+            }
 
-    const authed = isAuthenticated();
-    HEADER_CONFIG.NAV_LINKS.forEach((link) => {
-      if (authed && (link.text === "LOGIN" || link.text === "REGISTER")) return;
-      if (!authed && link.text === "LOGOUT") return;
-      const li = this.createNavigationLink(link);
-      li.className = "block w-full";
-      mobileMenuList.appendChild(li);
-    });
-    this.mobileMenu.appendChild(mobileMenuList);
+            <!-- Dark Mode Toggle -->
+            <button
+              onclick="window.toggleDarkMode()"
+              class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path class="hidden dark:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                <path class="dark:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
 
-    // Auth button (Login or Logout)
-    const authBtnContainer = document.createElement("div");
-    authBtnContainer.className = "px-4 py-2";
-    if (authed) {
-      authBtnContainer.appendChild(this.createLogoutButton(true));
-    } else {
-      // Login button using createGradientButton
-      const loginBtn = createGradientButton("LOGIN", "/login.html");
-      loginBtn.className =
-        "block w-full text-gray-600 hover:text-primary hover:bg-pink-50 dark:text-gray-300 dark:hover:text-[#e157b1] dark:hover:bg-pink-950/20 px-3 py-2 rounded-lg transition-all duration-200 font-semibold bg-gradient-to-br from-purple-500 to-primary text-white shadow-md mt-2";
-      authBtnContainer.appendChild(loginBtn);
-    }
-    this.mobileMenu.appendChild(authBtnContainer);
+            <!-- User Actions -->
+            ${
+              authenticated
+                ? `
+              <div class="flex items-center space-x-3">
+                <span class="hidden sm:block text-gray-700 dark:text-gray-300">Hello, ${currentUser.name}</span>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                  Logout
+                </button>
+              </div>
+            `
+                : `
+              <div class="flex items-center space-x-3">
+                <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Login</a>
+                <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors">Register</a>
+              </div>
+            `
+            }
 
-    // Dark mode toggle
-    const darkModeToggle = document.createElement("button");
-    darkModeToggle.id = "mobileDarkModeToggle";
-    darkModeToggle.className =
-      "block w-full mt-2 p-2 rounded-lg hover:bg-pink-100 dark:hover:bg-gray-800 transition-colors text-center text-gray-700 dark:text-gray-300";
-    darkModeToggle.innerHTML = `
-      <span class="inline-block align-middle mr-2">🌓</span>
-      <span class="align-middle">Toggle Dark Mode</span>
-    `;
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
 
-    // Enhanced event listener with debugging
-    darkModeToggle.addEventListener("click", (e) => {
-      console.log("📱 Mobile dark mode button clicked!");
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col space-y-3">
+            <!-- Mobile Search - input only, no button -->
+            <div class="relative mb-3">
+              <input
+                type="text"
+                id="mobile-search"
+                placeholder="Search auctions..."
+                class="px-4 py-2 pr-10 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-pink-500"
+              >
+              <!-- Mobile Search Dropdown -->
+              <div id="mobile-search-dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <!-- Search results will be populated here -->
+              </div>
+            </div>
+
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Home</a>
+            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Auctions</a>
+            ${
+              authenticated
+                ? `
+              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Profile</a>
+              <div class="pt-2 border-t border-gray-200 dark:border-gray-600">
+                <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+              </div>
+            `
+                : `
+              <div class="flex flex-col space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Login</a>
+                <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
+              </div>
+            `
+            }
+          </div>
+        </div>
+      </div>
+    </nav>
+  `;
+}
+
+function setupEventListeners() {
+  console.log("Setting up header event listeners...");
+
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (mobileMenuBtn && mobileMenu) {
+    console.log("Setting up mobile menu toggle");
+    mobileMenuBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleDarkMode();
+      console.log("Mobile menu button clicked");
+      mobileMenu.classList.toggle("hidden");
     });
-
-    this.mobileMenu.appendChild(darkModeToggle);
+  } else {
+    console.error("Mobile menu elements not found:", {
+      mobileMenuBtn,
+      mobileMenu,
+    });
   }
 
-  createMenuButton() {
-    this.menuButton = document.createElement("button");
-    this.menuButton.id = "mobile-menu-button";
-    this.menuButton.className =
-      "block md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-black dark:text-white";
-    this.menuButton.setAttribute("aria-label", "Open menu");
-    this.menuButton.setAttribute("aria-expanded", "false");
-
-    // Menu icon (using text instead of SVG)
-    const menuIcon = document.createElement("span");
-    menuIcon.id = "menu-icon";
-    menuIcon.className = "text-2xl font-bold";
-    menuIcon.textContent = "☰";
-
-    // Close icon (using text instead of SVG)
-    const closeIcon = document.createElement("span");
-    closeIcon.id = "close-icon";
-    closeIcon.className = "text-2xl font-bold hidden";
-    closeIcon.textContent = "✕";
-
-    this.menuButton.appendChild(menuIcon);
-    this.menuButton.appendChild(closeIcon);
-
-    this.menuButton.addEventListener("click", () => this.toggleMenu());
-  }
-
-  toggleMenu() {
-    const isOpen = !this.mobileMenu.classList.contains("hidden");
-    this.mobileMenu.classList.toggle("hidden");
-
-    const menuIcon = document.getElementById("menu-icon");
-    const closeIcon = document.getElementById("close-icon");
-
-    if (menuIcon && closeIcon) {
-      menuIcon.classList.toggle("hidden");
-      closeIcon.classList.toggle("hidden");
-    }
-
-    this.menuButton.setAttribute(
-      "aria-label",
-      isOpen ? "Open menu" : "Close menu",
-    );
-    this.menuButton.setAttribute("aria-expanded", !isOpen);
-    this.mobileMenu.setAttribute("aria-hidden", isOpen);
-  }
-
-  handleResize() {
-    const isMobile = window.innerWidth < HEADER_CONFIG.BREAKPOINT;
-    if (this.menuButton) {
-      this.menuButton.style.display = isMobile ? "block" : "none";
-    }
-    if (this.mobileMenu) {
-      this.mobileMenu.classList.add("hidden");
-    }
-    if (this.navLinksList) {
-      this.navLinksList.style.display = isMobile ? "none" : "flex";
-    }
-    if (this.menuButton) {
-      this.menuButton.setAttribute("aria-expanded", "false");
-    }
-    if (this.mobileMenu) {
-      this.mobileMenu.setAttribute("aria-hidden", "true");
-    }
-  }
-
-  handleOutsideClick(event) {
-    const isMenuOpen = !this.mobileMenu.classList.contains("hidden");
-    if (
-      isMenuOpen &&
-      !this.mobileMenu.contains(event.target) &&
-      !this.menuButton.contains(event.target)
-    ) {
-      this.toggleMenu();
-    }
-  }
-
-  init() {
-    // Initialize dark mode
-    initDarkMode();
-    // Clear any existing content
-    this.header.innerHTML = "";
-
-    const nav = document.createElement("nav");
-    nav.className = "container mx-auto px-3 pt-2 pb-1";
-
-    const mainHeaderContent = document.createElement("div");
-    mainHeaderContent.className =
-      "flex justify-between items-center w-full pl-10";
-
-    // LEFT SECTION: Logo and Brand
-    const logoContainer = document.createElement("div");
-    logoContainer.className = "flex items-center space-x-2";
-    logoContainer.innerHTML = `
-      <a href="/" class="flex items-center space-x-2 group ">
-        <img src="/assets/images/logo.png" alt="Auction House Logo" class="h-20 w-20">
-        <span class="text-xl font-bold text-primary dark:text-primary group-hover:text-primary dark:group-hover:text-[#e157b1]">Pink Gavel Auctions</span>
-      </a>
-    `;
-
-    // MIDDLE SECTION: Desktop Navigation (HOME, PROFILE, LISTINGS)
-    const mainNavLinks = document.createElement("ul");
-    mainNavLinks.className = "hidden md:flex items-center space-x-8";
-    HEADER_CONFIG.NAV_LINKS.forEach((link) => {
-      if (["HOME", "PROFILE", "LISTINGS"].includes(link.text.toUpperCase())) {
-        mainNavLinks.appendChild(this.createNavigationLink(link));
+  // Header search button functionality
+  const headerSearchBtn = document.getElementById("header-search-btn");
+  if (headerSearchBtn) {
+    headerSearchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const headerSearch = document.getElementById("header-search");
+      if (headerSearch) {
+        const query = headerSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
       }
     });
+  }
 
-    // RIGHT SECTION: Login/Logout, Dark mode toggle, Mobile menu button
-    const rightSection = document.createElement("div");
-    rightSection.className = "flex items-center space-x-4";
-
-    const authed = isAuthenticated();
-    if (authed) {
-      rightSection.appendChild(this.createLogoutButton(false));
-    } else {
-      // Desktop Login button using createGradientButton
-      const loginBtn = createGradientButton("LOGIN", "/login.html");
-      loginBtn.classList.add("hidden", "md:block");
-      rightSection.appendChild(loginBtn);
-    }
-
-    // Dark mode toggle (desktop)
-    const darkModeToggle = document.createElement("button");
-    darkModeToggle.id = "darkModeToggle";
-    darkModeToggle.className =
-      "p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hidden md:block";
-    darkModeToggle.innerHTML = `
-      <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-      </svg>
-      <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-      </svg>
-    `;
-
-    // Enhanced event listener with debugging
-    darkModeToggle.addEventListener("click", (e) => {
-      console.log("🖥️ Desktop dark mode button clicked!");
-      e.preventDefault();
-      e.stopPropagation();
-      toggleDarkMode();
+  // Add Enter key functionality for header search
+  const headerSearch = document.getElementById("header-search");
+  if (headerSearch) {
+    headerSearch.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = headerSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
     });
-
-    rightSection.appendChild(darkModeToggle);
-
-    // Create mobile menu button (visible on all screen sizes to handle toggle)
-    this.createMenuButton();
-    rightSection.appendChild(this.menuButton);
-
-    // Create mobile menu
-    this.createMobileMenu();
-
-    // Assemble the navigation
-    mainHeaderContent.appendChild(logoContainer);
-    mainHeaderContent.appendChild(mainNavLinks);
-    mainHeaderContent.appendChild(rightSection);
-
-    nav.appendChild(mainHeaderContent);
-    nav.appendChild(this.mobileMenu);
-    this.header.appendChild(nav);
-
-    // Add event listeners
-    window.addEventListener("resize", this.resizeHandler);
-    document.addEventListener("click", this.clickHandler);
-    this.handleResize();
   }
 
-  destroy() {
-    window.removeEventListener("resize", this.resizeHandler);
-    document.removeEventListener("click", this.clickHandler);
+  // Add Enter key functionality for mobile search (no button needed)
+  const mobileSearch = document.getElementById("mobile-search");
+  if (mobileSearch) {
+    mobileSearch.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = mobileSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+  }
+
+  // Logout functionality
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      logoutUser();
+    });
+  }
+
+  // Initialize search and sort component
+  console.log("Initializing search and sort component...");
+  try {
+    searchAndSortComponent.init();
+    console.log("✅ Search and sort component initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize search and sort component:", error);
   }
 }
 
-// Export the class
-export default Header;
+// Initialize header
+export function initializeHeader() {
+  console.log("Initializing header...");
+  const headerElement = document.querySelector("header");
+  if (headerElement) {
+    headerElement.innerHTML = renderHeader();
 
-export function createHeader() {
-  const header = document.createElement("header");
-  header.className = "bg-white shadow-sm";
+    // Setup event listeners immediately after rendering
+    setupEventListeners();
 
-  const isAuthenticated = localStorage.getItem("token") !== null;
-  const user = isAuthenticated
-    ? JSON.parse(localStorage.getItem("user"))
-    : null;
-
-  header.innerHTML = `
-    <div class="container mx-auto px-4">
-      <div class="flex justify-between items-center h-16">
-        <a href="/" class="text-xl font-bold text-primary">Pink Gavel</a>
-
-        <nav>
-          ${
-            isAuthenticated
-              ? `
-            <div class="flex items-center gap-4">
-              <span>Credits: ${user?.credits || 0}</span>
-              <span>${user?.name}</span>
-              <button onclick="window.logout()" class="text-red-600">Logout</button>
-            </div>
-          `
-              : `
-            <div class="flex items-center gap-4">
-              <a href="/login.html">Login</a>
-              <a href="/register.html" class="bg-primary text-white px-4 py-2 rounded-sm">Register</a>
-            </div>
-          `
-          }
-        </nav>
-      </div>
-    </div>
-  `;
-
-  return header;
+    // Update credits display if user is logged in
+    if (isAuthenticated()) {
+      updateCreditsDisplay();
+    }
+  } else {
+    console.error("❌ Header element not found in DOM");
+  }
 }
 
-window.logout = function () {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  window.location.href = "/login.html";
-};
+// Auto-initialize when the script loads
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("DOM Content Loaded - initializing header");
+  initializeHeader();
+});
+
+// Listen for storage changes to update header when login state changes
+window.addEventListener("storage", (e) => {
+  if (e.key === "accessToken" || e.key === "user") {
+    console.log("Auth state changed, reinitializing header");
+    initializeHeader();
+  }
+});
