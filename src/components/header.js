@@ -5,7 +5,7 @@ import {
   getUserProfile,
 } from "../library/auth.js";
 import { searchAndSortComponent } from "./searchAndSort.js";
-import logo from "../assets/logo.png";
+import logo from "../assets/images/logo.png";
 
 // Global variable to store current credits
 let userCredits = null;
