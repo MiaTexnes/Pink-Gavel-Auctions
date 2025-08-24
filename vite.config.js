@@ -9,6 +9,10 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
     minify: true,
+    // Removed rollupOptions.input
+  },
+  css: {
+    postcss: "./postcss.config.js",
   },
   test: {
     globals: true,
