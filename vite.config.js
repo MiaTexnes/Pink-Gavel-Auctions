@@ -6,7 +6,7 @@ export default defineConfig({
     open: true,
   },
   build: {
-    outDir: "dist",
+    outDir: "Pink-Gavel-Auctions",
     assetsDir: "assets",
     minify: true,
     rollupOptions: {
