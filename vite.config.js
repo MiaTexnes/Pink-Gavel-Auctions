@@ -12,7 +12,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
-        style: "src/css/style.css", // This might be causing issues
       },
     },
   },
