@@ -75,12 +75,12 @@ function renderHeader() {
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-6">
               <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.endsWith("/index.html")
+                currentPath.includes("/index.html")
                   ? "font-bold text-pink-600"
                   : ""
               }">Home</a>
               <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/allListings.html")
+                currentPath.includes("/alllistings.html")
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
