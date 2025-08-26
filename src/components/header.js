@@ -80,7 +80,7 @@ function renderHeader() {
                   : ""
               }">Home</a>
               <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/alllistings.html")
+                currentPath.includes("/allListings.html")
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
