@@ -11,8 +11,10 @@ let userCredits = null;
 
 // Function to update credits display
 async function updateCreditsDisplay() {
-  const creditsElements = document.querySelectorAll("#user-credits"); // Select all instances of #user-credits
-  if (!creditsElements.length) return;
+  const creditsElement = document.getElementById("user-credits"); // Desktop credits display
+  const mobileCreditsElement = document.getElementById("mobile-user-credits"); // Mobile credits display
+
+  if (!creditsElement && !mobileCreditsElement) return;
 
   if (isAuthenticated()) {
     const currentUser = getCurrentUser();
@@ -22,26 +24,30 @@ async function updateCreditsDisplay() {
         if (profile && typeof profile.credits === "number") {
           userCredits = profile.credits;
 
-          // Update all #user-credits elements
-          creditsElements.forEach((element) => {
-            element.textContent = `${profile.credits} credits`;
-            element.classList.remove("hidden");
-          });
+          // Update desktop credits display
+          if (creditsElement) {
+            creditsElement.textContent = `${profile.credits} credits`;
+            creditsElement.classList.remove("hidden");
+          }
+
+          // Update mobile credits display
+          if (mobileCreditsElement) {
+            mobileCreditsElement.textContent = `${profile.credits} credits`;
+            mobileCreditsElement.classList.remove("hidden");
+          }
         }
       } catch (error) {
         console.error("Error updating credits:", error);
 
-        // Hide all #user-credits elements on error
-        creditsElements.forEach((element) => {
-          element.classList.add("hidden");
-        });
+        // Hide credits on error
+        if (creditsElement) creditsElement.classList.add("hidden");
+        if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
       }
     }
   } else {
-    // Hide all #user-credits elements if not authenticated
-    creditsElements.forEach((element) => {
-      element.classList.add("hidden");
-    });
+    // Hide credits if not authenticated
+    if (creditsElement) creditsElement.classList.add("hidden");
+    if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
   }
 }
 
@@ -150,6 +156,47 @@ function renderHeader() {
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
           <div class="flex flex-col space-y-3">
+            <!-- Mobile Search -->
+            <div class="relative mb-3">
+              <input
+                type="text"
+                id="mobile-search"
+                placeholder="Search auctions..."
+                class="px-4 py-2 pr-10 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-pink-500"
+              >
+            </div>
+
+            <!-- Dark Mode Toggle -->
+            <div class="flex justify-center mb-3">
+              <button
+                onclick="window.toggleDarkMode()"
+                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path class="hidden dark:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  <path class="dark:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- User Info and Credits -->
+            ${
+              authenticated
+                ? `
+              <div class="pt-2 border-t border-gray-200 dark:border-gray-600 flex flex-col space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+                  <div id="mobile-user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                    Loading...
+                  </div>
+                </div>
+              </div>
+            `
+                : ""
+            }
+
+            <!-- Navigation Links -->
             <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
               currentPath.includes("/index.html")
                 ? "font-bold text-pink-600"
@@ -160,18 +207,20 @@ function renderHeader() {
                 ? "font-bold text-pink-600"
                 : ""
             }">Auctions</a>
+
+            <!-- Logout Button -->
             ${
               authenticated
                 ? `
-              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/profile.html")
-                  ? "font-bold text-pink-600"
-                  : ""
-              }">Profile</a>
+              <button id="logout-btn-mobile" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                Logout
+              </button>
             `
                 : `
-              <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Login</a>
-              <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
+              <div class="flex flex-col space-y-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2">Login</a>
+                <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
+              </div>
             `
             }
           </div>
@@ -189,11 +238,9 @@ function setupEventListeners() {
   const mobileMenu = document.getElementById("mobile-menu");
 
   if (mobileMenuBtn && mobileMenu) {
-    console.log("Setting up mobile menu toggle");
     mobileMenuBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("Mobile menu button clicked");
       mobileMenu.classList.toggle("hidden");
 
       // Update credits display when the mobile menu is opened
@@ -201,57 +248,9 @@ function setupEventListeners() {
         await updateCreditsDisplay();
       }
     });
-  } else {
-    console.error("Mobile menu elements not found:", {
-      mobileMenuBtn,
-      mobileMenu,
-    });
   }
 
-  // Header search button functionality
-  const headerSearchBtn = document.getElementById("header-search-btn");
-  if (headerSearchBtn) {
-    headerSearchBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const headerSearch = document.getElementById("header-search");
-      if (headerSearch) {
-        const query = headerSearch.value.trim();
-        if (query.length > 0) {
-          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
-        }
-      }
-    });
-  }
-
-  // Add Enter key functionality for header search
-  const headerSearch = document.getElementById("header-search");
-  if (headerSearch) {
-    headerSearch.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const query = headerSearch.value.trim();
-        if (query.length > 0) {
-          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
-        }
-      }
-    });
-  }
-
-  // Add Enter key functionality for mobile search (no button needed)
-  const mobileSearch = document.getElementById("mobile-search");
-  if (mobileSearch) {
-    mobileSearch.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const query = mobileSearch.value.trim();
-        if (query.length > 0) {
-          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
-        }
-      }
-    });
-  }
-
-  // Logout functionality
+  // Logout functionality for desktop
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
@@ -260,13 +259,24 @@ function setupEventListeners() {
     });
   }
 
-  // Initialize search and sort component
-  console.log("Initializing search and sort component...");
-  try {
-    searchAndSortComponent.init();
-    console.log("✅ Search and sort component initialized successfully");
-  } catch (error) {
-    console.error("❌ Failed to initialize search and sort component:", error);
+  // Logout functionality for mobile
+  const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+  if (logoutBtnMobile) {
+    logoutBtnMobile.addEventListener("click", (e) => {
+      e.preventDefault();
+      logoutUser();
+    });
+  }
+
+  // Dark mode toggle
+  const darkModeToggle = document.querySelector(
+    '[onclick="window.toggleDarkMode()"]'
+  );
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.toggleDarkMode();
+    });
   }
 }
 
