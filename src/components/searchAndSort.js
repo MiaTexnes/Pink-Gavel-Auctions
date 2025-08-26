@@ -212,7 +212,7 @@ export class SearchAndSortComponent {
         "bg-gray-200",
         "dark:bg-gray-700",
         "text-gray-700",
-        "dark:text-gray-300",
+        "dark:text-gray-300"
       );
     });
 
@@ -220,7 +220,7 @@ export class SearchAndSortComponent {
       "bg-gray-200",
       "dark:bg-gray-700",
       "text-gray-700",
-      "dark:text-gray-300",
+      "dark:text-gray-300"
     );
     activeButton.classList.add("bg-pink-500", "text-white");
   }
@@ -269,7 +269,7 @@ export class SearchAndSortComponent {
 
         if (query.length > 0) {
           // Navigate to listings page with search
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         } else {
           clearTimeout(this.searchTimeout);
           this.performSearch(query);
@@ -335,7 +335,7 @@ export class SearchAndSortComponent {
           ${results.map((listing) => this.createDropdownItem(listing)).join("")}
           <div class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
             <button
-              onclick="window.location.href='/allListings.html?search=${encodeURIComponent(query)}'"
+              onclick="window.location.href='/listings.html?search=${encodeURIComponent(query)}'"
               class="w-full text-left px-2 py-2 text-sm text-pink-600 dark:text-pink-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center justify-center font-medium"
             >
               View all ${totalCount} results →
@@ -442,7 +442,7 @@ export class SearchAndSortComponent {
       "Performing search for:",
       query,
       "with sort:",
-      this.currentSort,
+      this.currentSort
     );
 
     try {
@@ -504,7 +504,7 @@ export class SearchAndSortComponent {
 
       const response = await fetch(
         `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
-        { headers },
+        { headers }
       );
 
       if (!response.ok) {
@@ -512,12 +512,12 @@ export class SearchAndSortComponent {
       }
 
       const responseData = await response.json();
-      const allListings = responseData.data || [];
+      const listings = responseData.data || [];
 
-      console.log("Search API returned", allListings.length, "listings");
+      console.log("Search API returned", listings.length, "listings");
 
       // Filter locally for more comprehensive search
-      const results = this.filterListings(allListings, query);
+      const results = this.filterListings(listings, query);
 
       // Cache the results
       this.cache.set(cacheKey, {
@@ -577,22 +577,22 @@ export class SearchAndSortComponent {
         // First filter to only active auctions, then sort by ending soon
         const activeAuctions = this.filterActiveAuctions(sorted);
         return activeAuctions.sort(
-          (a, b) => new Date(a.endsAt) - new Date(b.endsAt),
+          (a, b) => new Date(a.endsAt) - new Date(b.endsAt)
         );
 
       case "most-bids":
         return sorted.sort(
-          (a, b) => (b._count?.bids || 0) - (a._count?.bids || 0),
+          (a, b) => (b._count?.bids || 0) - (a._count?.bids || 0)
         );
 
       case "title-az":
         return sorted.sort((a, b) =>
-          (a.title || "").localeCompare(b.title || ""),
+          (a.title || "").localeCompare(b.title || "")
         );
 
       case "title-za":
         return sorted.sort((a, b) =>
-          (b.title || "").localeCompare(a.title || ""),
+          (b.title || "").localeCompare(a.title || "")
         );
 
       default:

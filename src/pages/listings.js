@@ -9,7 +9,7 @@ const messageText = document.getElementById("message-text");
 const loadingSpinner = document.getElementById("loading-spinner");
 
 // Global variables for search functionality
-let allListings = [];
+let listings = [];
 let filteredListings = [];
 
 // Global variable to store selected media URLs
@@ -53,7 +53,7 @@ export function createListingCard(listing) {
   } else {
     const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor(
-      (timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      (timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
     timeLeftString = `Ends: ${days}d ${hours}h ${minutes}m`;
@@ -123,7 +123,7 @@ export function createListingCard(listing) {
 }
 
 // Fetch all listings from API
-async function fetchAllListings() {
+async function fetchlistings() {
   if (!listingsContainer) return;
   showLoading();
 
@@ -143,33 +143,27 @@ async function fetchAllListings() {
       `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
       {
         headers: headers,
-      },
+      }
     );
 
     console.log("API Response status:", response.status);
     console.log(
       "API Response headers:",
-      Object.fromEntries(response.headers.entries()),
+      Object.fromEntries(response.headers.entries())
     );
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error("API Error:", errorData);
       throw new Error(
-        errorData.errors?.[0]?.message || "Failed to fetch listings.",
+        errorData.errors?.[0]?.message || "Failed to fetch listings."
       );
     }
 
     const responseData = await response.json();
     console.log("Full API Response:", responseData);
-    console.log("Response data structure:", {
-      hasData: !!responseData.data,
-      dataLength: responseData.data?.length || 0,
-      firstItem: responseData.data?.[0],
-      meta: responseData.meta,
-    });
 
-    const listings = responseData.data || [];
+    listings = responseData.data || []; // Now this reassignment works
 
     if (listings.length === 0) {
       console.log("No listings returned from API");
@@ -177,13 +171,6 @@ async function fetchAllListings() {
       return;
     }
 
-    // Debug the first few listings
-    console.log("First 3 listings:", listings.slice(0, 3));
-
-    // Store listings globally for search functionality
-    allListings = listings;
-
-    // Display listings without additional sorting initially
     displayListings(listings);
   } catch (error) {
     console.error("Error fetching listings:", error);
@@ -308,7 +295,7 @@ window.clearSearchResults = function () {
   if (mobileSearch) mobileSearch.value = "";
 
   removeSearchIndicator();
-  displayListings(allListings);
+  displayListings(listings);
 
   const url = new URL(window.location);
   url.searchParams.delete("search");
@@ -324,7 +311,7 @@ function openAddListingModal() {
   // Set minimum date to current date/time
   const now = new Date();
   const localDateTime = new Date(
-    now.getTime() - now.getTimezoneOffset() * 60000,
+    now.getTime() - now.getTimezoneOffset() * 60000
   )
     .toISOString()
     .slice(0, 16);
@@ -603,7 +590,7 @@ function updateAuthUI() {
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", () => {
-  // Only run on allListings page
+  // Only run on listings page
   if (!listingsContainer) return;
 
   // Initialize search and sort component
@@ -620,13 +607,13 @@ document.addEventListener("DOMContentLoaded", () => {
       "bg-gray-200",
       "dark:bg-gray-700",
       "text-gray-700",
-      "dark:text-gray-300",
+      "dark:text-gray-300"
     );
     newestButton.classList.add("bg-pink-500", "text-white");
   }
 
   // Load initial listings (will be sorted newest first)
-  fetchAllListings();
+  fetchlistings();
 
   // Listen for search events
   window.addEventListener("searchPerformed", handleSearchResults);
@@ -693,7 +680,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tags: tags, // Pass tags string to createListing function
         });
         closeAddListing();
-        fetchAllListings();
+        fetchlistings();
       } catch (err) {
         alert(err.message || "Failed to create listing.");
       }

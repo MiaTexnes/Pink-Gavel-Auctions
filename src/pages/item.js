@@ -105,7 +105,7 @@ function formatTimeRemaining(endDate) {
 
   const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
   const hours = Math.floor(
-    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
   );
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
@@ -351,7 +351,7 @@ function renderBiddingHistory(bids) {
             bid.bidder?.name || "Unknown Bidder"
           }</p>
           <p class="text-sm text-gray-500 dark:text-gray-400">${new Date(
-            bid.created,
+            bid.created
           ).toLocaleString()}</p>
         </div>
       </div>
@@ -391,13 +391,13 @@ async function fetchListing(id) {
       `${API_BASE}/auction/listings/${id}?_seller=true&_bids=true`,
       {
         headers: headers,
-      },
+      }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        errorData.errors?.[0]?.message || "Failed to fetch listing",
+        errorData.errors?.[0]?.message || "Failed to fetch listing"
       );
     }
 
@@ -455,18 +455,18 @@ async function deleteListing() {
           "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
           Authorization: authHeader.Authorization,
         },
-      },
+      }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        errorData.errors?.[0]?.message || "Failed to delete listing",
+        errorData.errors?.[0]?.message || "Failed to delete listing"
       );
     }
 
     alert("Listing deleted successfully!");
-    window.location.href = "/allListings.html";
+    window.location.href = "/listings.html";
   } catch (error) {
     console.error("Error deleting listing:", error);
     alert(error.message);
@@ -492,13 +492,13 @@ async function editListing(updatedData) {
           Authorization: authHeader.Authorization,
         },
         body: JSON.stringify(updatedData),
-      },
+      }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        errorData.errors?.[0]?.message || "Failed to update listing",
+        errorData.errors?.[0]?.message || "Failed to update listing"
       );
     }
 
@@ -691,7 +691,7 @@ function handleSearchResults(event) {
 
   // For item page, redirect to listings page with search results
   if (results.length > 0) {
-    window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+    window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
   } else {
     console.log("No search results found for:", query);
   }

@@ -1,5 +1,5 @@
 import { isAuthenticated } from "../library/auth.js";
-import { createListingCard } from "./allListings.js";
+import { createListingCard } from "./listings.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -27,7 +27,7 @@ function renderAuthButtons() {
     homeAuthButtons.innerHTML = `
       <div class="text-center">
         <p class="text-black mb-4">Welcome back! Ready to bid on some amazing items?</p>
-        <a href="/allListings.html" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+        <a href="/listings.html" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
           Browse Auctions
         </a>
       </div>
@@ -55,7 +55,7 @@ async function fetchLatestListings(limit = 20) {
         "Content-Type": "application/json",
         "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
       },
-    },
+    }
   );
   if (!response.ok) throw new Error("Failed to fetch listings");
   const responseData = await response.json();
@@ -155,13 +155,13 @@ function renderCarousel(listings) {
     if (currentIndex === 0) {
       leftBtn.className = leftBtn.className.replace(
         "bg-pink-500 hover:bg-pink-600",
-        "bg-gray-400 cursor-not-allowed",
+        "bg-gray-400 cursor-not-allowed"
       );
       leftBtn.className = leftBtn.className.replace("hover:scale-105", "");
     } else {
       leftBtn.className = leftBtn.className.replace(
         "bg-gray-400 cursor-not-allowed",
-        "bg-pink-500 hover:bg-pink-600",
+        "bg-pink-500 hover:bg-pink-600"
       );
       if (!leftBtn.className.includes("hover:scale-105")) {
         leftBtn.className += " hover:scale-105";
@@ -171,13 +171,13 @@ function renderCarousel(listings) {
     if (currentIndex >= total - cardsPerView) {
       rightBtn.className = rightBtn.className.replace(
         "bg-pink-500 hover:bg-pink-600",
-        "bg-gray-400 cursor-not-allowed",
+        "bg-gray-400 cursor-not-allowed"
       );
       rightBtn.className = rightBtn.className.replace("hover:scale-105", "");
     } else {
       rightBtn.className = rightBtn.className.replace(
         "bg-gray-400 cursor-not-allowed",
-        "bg-pink-500 hover:bg-pink-600",
+        "bg-pink-500 hover:bg-pink-600"
       );
       if (!rightBtn.className.includes("hover:scale-105")) {
         rightBtn.className += " hover:scale-105";
@@ -210,7 +210,7 @@ function renderCarousel(listings) {
 
       // Also check for any container that might be cropping
       const imageContainers = card.querySelectorAll(
-        '.aspect-square, .aspect-video, [class*="aspect-"]',
+        '.aspect-square, .aspect-video, [class*="aspect-"]'
       );
       imageContainers.forEach((container) => {
         // Remove fixed aspect ratios that might crop images

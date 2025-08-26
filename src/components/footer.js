@@ -13,7 +13,7 @@ export function initializeFooter() {
         <div class="col-span-2 md:col-span-1 flex flex-col items-center md:items-start">
           <div class="flex items-center space-x-2 mb-3">
             <div class="w-6 h-6 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-              
+
             </div>
             <span class="text-lg font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
               Pink Gavel
@@ -25,7 +25,7 @@ export function initializeFooter() {
         <div class="flex flex-col items-center md:items-start">
           <h3 class="text-white dark:text-gray-200 font-medium text-sm mb-3">Browse</h3>
           <div class="space-y-2 flex flex-col items-center md:items-start">
-            <a href="/allListings.html" class="text-gray-400 dark:text-gray-500 hover:text-pink-400 transition-colors duration-200 text-sm">
+            <a href="/listings.html" class="text-gray-400 dark:text-gray-500 hover:text-pink-400 transition-colors duration-200 text-sm">
               All Auctions
             </a>
             <a href="/categories.html" class="text-gray-400 dark:text-gray-500 hover:text-pink-400 transition-colors duration-200 text-sm">

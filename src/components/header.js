@@ -79,8 +79,8 @@ function renderHeader() {
                   ? "font-bold text-pink-600"
                   : ""
               }">Home</a>
-              <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/alllistings.html")
+              <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+                currentPath.includes("/listings.html")
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
@@ -187,7 +187,7 @@ function setupEventListeners() {
       if (headerSearch) {
         const query = headerSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });
@@ -201,7 +201,7 @@ function setupEventListeners() {
         e.preventDefault();
         const query = headerSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });
@@ -215,7 +215,7 @@ function setupEventListeners() {
         e.preventDefault();
         const query = mobileSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });

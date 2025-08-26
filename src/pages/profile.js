@@ -3,7 +3,7 @@ import {
   getCurrentUser,
   logoutUser,
 } from "../library/auth.js";
-import { createListingCard } from "./allListings.js";
+import { createListingCard } from "./listings.js";
 
 const API_BASE = "https://v2.api.noroff.dev";
 const profileContainer = document.getElementById("profile-content");
@@ -51,7 +51,7 @@ function renderProfileView(profile) {
                   (win) =>
                     `<li class="py-1 border-b border-gray-200 dark:border-gray-600 last:border-b-0">${
                       win.title || win.id
-                    }</li>`,
+                    }</li>`
                 )
                 .join("")
             : '<li class="text-gray-500 dark:text-gray-400">No wins yet.</li>'
@@ -114,7 +114,7 @@ function renderProfileView(profile) {
   // Render user listings using the reusable card function
   if (profile.listings && profile.listings.length > 0) {
     const userListingsContainer = document.getElementById(
-      "user-listings-container",
+      "user-listings-container"
     );
     if (userListingsContainer) {
       profile.listings.forEach((listing) => {
@@ -244,7 +244,7 @@ function renderProfileEditForm(profile) {
       if (name !== profile.name) {
         showMessage(
           "error",
-          "You can only change your avatar. Username cannot be changed.",
+          "You can only change your avatar. Username cannot be changed."
         );
         return;
       }
@@ -280,7 +280,7 @@ async function fetchProfile(name) {
         "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
         Authorization: `Bearer ${token}`,
       },
-    },
+    }
   );
 
   if (!res.ok) {
@@ -316,7 +316,7 @@ async function updateAvatar({ avatar, name }) {
   if (!res.ok) {
     const errorData = await res.json();
     throw new Error(
-      errorData.errors?.[0]?.message || "Failed to update avatar",
+      errorData.errors?.[0]?.message || "Failed to update avatar"
     );
   }
 
@@ -341,7 +341,7 @@ async function createListing({ title, description, endsAt, media }) {
   if (!res.ok) {
     const errorData = await res.json();
     throw new Error(
-      errorData.errors?.[0]?.message || "Failed to create listing",
+      errorData.errors?.[0]?.message || "Failed to create listing"
     );
   }
 
@@ -372,7 +372,7 @@ async function main() {
       "Profile page: User data incomplete - user:",
       user,
       "user.name:",
-      user?.name,
+      user?.name
     );
     if (profileContainer) {
       profileContainer.innerHTML =
