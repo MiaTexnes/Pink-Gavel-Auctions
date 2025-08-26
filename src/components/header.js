@@ -146,6 +146,36 @@ function renderHeader() {
             </button>
           </div>
         </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col space-y-3">
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+              currentPath.includes("/index.html")
+                ? "font-bold text-pink-600"
+                : ""
+            }">Home</a>
+            <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+              currentPath.includes("/listings.html")
+                ? "font-bold text-pink-600"
+                : ""
+            }">Auctions</a>
+            ${
+              authenticated
+                ? `
+              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+                currentPath.includes("/profile.html")
+                  ? "font-bold text-pink-600"
+                  : ""
+              }">Profile</a>
+            `
+                : `
+              <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Login</a>
+              <a href="/register.html" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg transition-colors text-center">Register</a>
+            `
+            }
+          </div>
+        </div>
       </div>
     </nav>
   `;
