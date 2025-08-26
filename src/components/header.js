@@ -80,7 +80,7 @@ function renderHeader() {
                   : ""
               }">Home</a>
               <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.endsWith("/alllistings.html")
+                currentPath.includes("/alllistings.html")
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
@@ -88,7 +88,7 @@ function renderHeader() {
                 authenticated
                   ? `
                 <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                  currentPath.endsWith("/profile.html")
+                  currentPath.includes("/profile.html")
                     ? "font-bold text-pink-600"
                     : ""
                 }">Profile</a>
