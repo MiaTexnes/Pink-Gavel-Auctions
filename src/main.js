@@ -137,11 +137,11 @@ function initializePage() {
 
   initializeFooter();
 
-  // Add padding to main content to account for fixed header
-  const main = document.querySelector("main");
-  if (main) {
-    main.classList.add("pt-10");
-  }
+  // // Add padding to main content to account for fixed header
+  // const main = document.querySelector("main");
+  // if (main) {
+  //   main.classList.add("pt-10");
+  // }
 
   const homeAuthButtons = document.getElementById("home-auth-buttons");
   if (homeAuthButtons) {
