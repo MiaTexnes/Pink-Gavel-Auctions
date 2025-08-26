@@ -22,13 +22,32 @@ function showMessage(type, message) {
 
 function renderProfileView(profile) {
   profileContainer.innerHTML = `
-    <div class="flex flex-col items-center mb-6">
-      <img src="${
-        profile.avatar?.url || "https://placehold.co/150x150?text=Avatar"
-      }" alt="Avatar" class="w-32 h-32 rounded-full mb-4 object-cover border-4 border-pink-500">
-      <h2 class="text-3xl font-bold mb-2">${profile.name}</h2>
-      <p class="text-gray-600 dark:text-gray-300">${profile.email}</p>
+    <!-- Profile Header -->
+    <div class="flex flex-col md:flex-row items-center md:items-start mb-6">
+      <!-- Profile Image -->
+      <div class="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+        <img
+          id="profile-image"
+          src="${profile.avatar?.url || "https://placehold.co/150x150?text=Avatar"}"
+          alt="Avatar"
+          class="w-32 h-32 rounded-full object-cover border-4 border-pink-500 cursor-pointer"
+        />
+      </div>
+
+      <!-- User Details -->
+      <div class="text-center md:text-left">
+        <h2 class="text-3xl font-bold mb-2">${profile.name}</h2>
+        <p class="text-gray-600 dark:text-gray-300">${profile.email}</p>
+      </div>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-center space-x-4 mb-6">
+      <button id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Edit Profile</button>
+      <button id="newListingBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">New Listing</button>
+    </div>
+
+    <!-- Stats Section -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center mb-6">
       <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
         <p class="text-lg font-semibold">Credits</p>
@@ -41,6 +60,8 @@ function renderProfileView(profile) {
         }</p>
       </div>
     </div>
+
+    <!-- Wins Section -->
     <div class="mb-6">
       <h3 class="text-xl font-semibold mb-2">Wins</h3>
       <ul class="list-disc list-inside bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
@@ -58,6 +79,8 @@ function renderProfileView(profile) {
         }
       </ul>
     </div>
+
+    <!-- Listings Section -->
     ${
       profile.listings && profile.listings.length > 0
         ? `
@@ -66,6 +89,14 @@ function renderProfileView(profile) {
         <div id="user-listings-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <!-- Listings will be inserted here by JavaScript -->
         </div>
+        ${
+          profile.listings.length > 4
+            ? `<div class="flex justify-center mt-4">
+                <button id="viewMoreListingsBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">View More</button>
+                <button id="viewLessListingsBtn" class="hidden bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors ml-4">View Less</button>
+              </div>`
+            : ""
+        }
       </div>
     `
         : `
@@ -75,12 +106,39 @@ function renderProfileView(profile) {
     `
     }
 
-    <div class="flex justify-center space-x-4">
-      <button id="newListingBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">New Listing</button>
-      <button id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Edit Profile</button>
-      <button id="logoutBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors">Logout</button>
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button id="closeEditProfileModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
+        <h2 class="text-2xl font-bold mb-4">Edit Profile</h2>
+        <form id="editProfileForm" class="space-y-4">
+          <div>
+            <label for="editAvatar" class="block mb-1 font-semibold">Avatar URL</label>
+            <input type="url" id="editAvatar" name="avatar" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" value="${
+              profile.avatar?.url || ""
+            }">
+          </div>
+          <div>
+            <label for="editName" class="block mb-1 font-semibold">Name</label>
+            <input type="text" id="editName" name="name" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
+              profile.name
+            }" readonly>
+          </div>
+          <div>
+            <label for="editEmail" class="block mb-1 font-semibold">Email</label>
+            <input type="email" id="editEmail" name="email" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
+              profile.email
+            }" readonly>
+          </div>
+          <div class="flex justify-end space-x-4">
+            <button type="button" id="cancelEditProfileBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
 
+    <!-- New Listing Modal -->
     <div id="newListingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
         <button id="closeNewListingModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
@@ -95,48 +153,77 @@ function renderProfileView(profile) {
             <textarea id="listingDesc" name="description" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" rows="3" required></textarea>
           </div>
           <div>
-            <label for="listingEndDate" class="block mb-1 font-semibold">End Date</label>
+            <label for="listingEndDate" class="block mb-1 font-semibold">Ends At</label>
             <input type="datetime-local" id="listingEndDate" name="endsAt" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
           </div>
           <div>
             <label for="listingImage" class="block mb-1 font-semibold">Image URL</label>
-            <input type="url" id="listingImage" name="media" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+            <input type="url" id="listingImage" name="image" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
           </div>
-          <div class="flex justify-end space-x-2">
+          <div class="flex justify-end space-x-4">
             <button type="button" id="cancelNewListingBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Create</button>
+            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Create Listing</button>
           </div>
         </form>
       </div>
     </div>
+
+    <!-- Profile Image Modal -->
+    <div
+      id="profileImageModal"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 hidden"
+    >
+      <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-[90%] max-h-[90%]">
+        <img
+          id="profileImageModalContent"
+          src="${profile.avatar?.url || "https://placehold.co/150x150?text=Avatar"}"
+          alt="Avatar"
+          class=" max-w-20 max-h-20 object-contain rounded-lg cursor-pointer"
+        />
+      </div>
+    </div>
   `;
 
-  // Render user listings using the reusable card function
-  if (profile.listings && profile.listings.length > 0) {
-    const userListingsContainer = document.getElementById(
-      "user-listings-container"
-    );
-    if (userListingsContainer) {
-      profile.listings.forEach((listing) => {
-        userListingsContainer.appendChild(createListingCard(listing));
-      });
-    }
+  // Add event listeners for the Edit Profile modal
+  const editProfileBtn = document.getElementById("editProfileBtn");
+  const editProfileModal = document.getElementById("editProfileModal");
+  const closeEditProfileModal = document.getElementById(
+    "closeEditProfileModal"
+  );
+  const cancelEditProfileBtn = document.getElementById("cancelEditProfileBtn");
+
+  function openEditProfileModal() {
+    editProfileModal.classList.remove("hidden");
   }
 
+  function closeEditProfile() {
+    editProfileModal.classList.add("hidden");
+    document.getElementById("editProfileForm").reset();
+  }
+
+  editProfileBtn.addEventListener("click", openEditProfileModal);
+  closeEditProfileModal.addEventListener("click", closeEditProfile);
+  cancelEditProfileBtn.addEventListener("click", closeEditProfile);
+
+  // Handle Edit Profile form submission
   document
-    .getElementById("editProfileBtn")
-    .addEventListener("click", () => renderProfileEditForm(profile));
-  document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+    .getElementById("editProfileForm")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const avatar = document.getElementById("editAvatar").value.trim();
 
-  // Set minimum date for listing end date
-  const listingEndDate = document.getElementById("listingEndDate");
-  if (listingEndDate) {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1); // Set to 1 minute from now
-    listingEndDate.min = now.toISOString().slice(0, 16);
-  }
+      try {
+        await updateAvatar({ avatar, name: profile.name });
+        showMessage("success", "Profile updated successfully!");
+        closeEditProfile();
+        const refreshedProfile = await fetchProfile(profile.name);
+        renderProfileView(refreshedProfile);
+      } catch (err) {
+        showMessage("error", err.message || "Failed to update profile.");
+      }
+    });
 
-  // Modal logic
+  // New Listing Modal Logic
   const newListingBtn = document.getElementById("newListingBtn");
   const newListingModal = document.getElementById("newListingModal");
   const closeNewListingModal = document.getElementById("closeNewListingModal");
@@ -145,42 +232,108 @@ function renderProfileView(profile) {
   function openNewListingModal() {
     newListingModal.classList.remove("hidden");
   }
+
   function closeNewListing() {
     newListingModal.classList.add("hidden");
     document.getElementById("newListingForm").reset();
   }
-  newListingBtn.addEventListener("click", openNewListingModal);
-  closeNewListingModal.addEventListener("click", closeNewListing);
-  cancelNewListingBtn.addEventListener("click", closeNewListing);
 
-  document
-    .getElementById("newListingForm")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("listingTitle").value.trim();
-      const description = document.getElementById("listingDesc").value.trim();
-      const endsAt = document.getElementById("listingEndDate").value;
-      const mediaUrl = document.getElementById("listingImage").value.trim();
+  if (newListingBtn && newListingModal) {
+    newListingBtn.addEventListener("click", openNewListingModal);
+    closeNewListingModal.addEventListener("click", closeNewListing);
+    cancelNewListingBtn.addEventListener("click", closeNewListing);
 
-      // Convert to ISO string
-      const endDate = new Date(endsAt).toISOString();
+    document
+      .getElementById("newListingForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("listingTitle").value.trim();
+        const description = document.getElementById("listingDesc").value.trim();
+        const endsAt = document.getElementById("listingEndDate").value;
+        const mediaUrl = document.getElementById("listingImage").value.trim();
 
-      try {
-        await createListing({
-          title,
-          description,
-          endsAt: endDate,
-          media: mediaUrl ? [{ url: mediaUrl, alt: title }] : [],
+        try {
+          await createListing({
+            title,
+            description,
+            endsAt: new Date(endsAt).toISOString(),
+            media: mediaUrl ? [{ url: mediaUrl, alt: title }] : [],
+          });
+          showMessage("success", "Listing created successfully!");
+          closeNewListing();
+          const refreshedProfile = await fetchProfile(profile.name);
+          renderProfileView(refreshedProfile);
+        } catch (err) {
+          showMessage("error", err.message || "Failed to create listing.");
+        }
+      });
+  }
+
+  // Render user's listings
+  if (profile.listings && profile.listings.length > 0) {
+    const userListingsContainer = document.getElementById(
+      "user-listings-container"
+    );
+    const initialListings = profile.listings.slice(0, 4); // Show only the first 4 listings initially
+    const remainingListings = profile.listings.slice(4); // Remaining listings
+
+    // Render the initial 4 listings
+    initialListings.forEach((listing) => {
+      userListingsContainer.appendChild(createListingCard(listing));
+    });
+
+    // Add "View More" functionality
+    const viewMoreBtn = document.getElementById("viewMoreListingsBtn");
+    const viewLessBtn = document.getElementById("viewLessListingsBtn");
+
+    if (viewMoreBtn && remainingListings.length > 0) {
+      viewMoreBtn.addEventListener("click", () => {
+        // Render the remaining listings
+        remainingListings.forEach((listing) => {
+          userListingsContainer.appendChild(createListingCard(listing));
         });
-        showMessage("success", "Listing created successfully!");
-        closeNewListing();
-        // Refresh profile view to show new listing
-        const refreshedProfile = await fetchProfile(profile.name);
-        renderProfileView(refreshedProfile);
-      } catch (err) {
-        showMessage("error", err.message || "Failed to create listing.");
+        viewMoreBtn.classList.add("hidden"); // Hide "View More" button
+        viewLessBtn.classList.remove("hidden"); // Show "View Less" button
+      });
+    }
+
+    // Add "View Less" functionality
+    if (viewLessBtn) {
+      viewLessBtn.addEventListener("click", () => {
+        // Remove the remaining listings
+        const allListings = Array.from(userListingsContainer.children);
+        allListings.slice(4).forEach((listing) => listing.remove());
+        viewLessBtn.classList.add("hidden"); // Hide "View Less" button
+        viewMoreBtn.classList.remove("hidden"); // Show "View More" button
+      });
+    }
+  }
+
+  // Profile Image Modal Logic
+  const profileImage = document.getElementById("profile-image");
+  const profileImageModal = document.getElementById("profileImageModal");
+  const profileImageModalContent = document.getElementById(
+    "profileImageModalContent"
+  );
+
+  if (profileImage && profileImageModal) {
+    // Open the modal when the profile image is clicked
+    profileImage.addEventListener("click", () => {
+      profileImageModal.classList.remove("hidden");
+    });
+
+    // Close the modal when the enlarged image is clicked
+    profileImageModalContent.addEventListener("click", () => {
+      profileImageModal.classList.add("hidden");
+    });
+
+    // Close the modal when clicking outside the image
+    profileImageModal.addEventListener("click", (e) => {
+      if (e.target === profileImageModal) {
+        profileImageModal.classList.add("hidden");
       }
     });
+  }
 }
 
 function renderProfileEditForm(profile) {
@@ -296,6 +449,7 @@ async function fetchProfile(name) {
   }
 
   const responseData = await res.json();
+  console.log("API Response:", responseData); // Debugging line
   return responseData.data;
 }
 
