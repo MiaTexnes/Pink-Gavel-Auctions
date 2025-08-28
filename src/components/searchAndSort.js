@@ -52,53 +52,15 @@ export class SearchAndSortComponent {
     const dropdown = document.createElement("div");
     dropdown.id = dropdownId;
 
-    if (dropdownId === "header-search-dropdown") {
-      // For header search, find the outer container that has responsive classes
-      let searchContainer = searchInput.parentElement;
+    // Common dropdown styling
+    dropdown.className =
+      "absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-full";
 
-      // Look for the container with "hidden md:flex" classes
-      while (
-        searchContainer &&
-        !searchContainer.classList.contains("md:flex")
-      ) {
-        searchContainer = searchContainer.parentElement;
-        // Safety check to avoid infinite loop
-        if (searchContainer === document.body) {
-          searchContainer = null;
-          break;
-        }
-      }
-
-      if (searchContainer && searchContainer.classList.contains("md:flex")) {
-        // Position the dropdown relative to the outer container
-        dropdown.className =
-          "absolute left-0 mt-21 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
-
-        searchContainer.style.position = "relative";
-        searchContainer.appendChild(dropdown);
-      } else {
-        // Fallback: use fixed positioning
-        dropdown.className =
-          "fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
-
-        document.body.appendChild(dropdown);
-
-        // Store position update function
-        dropdown._updatePosition = () => {
-          const rect = searchInput.getBoundingClientRect();
-          dropdown.style.top = `${rect.bottom + 8}px`;
-          dropdown.style.left = `${rect.left}px`;
-        };
-      }
-    } else {
-      // Mobile search positioning remains the same
-      dropdown.className =
-        "absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto";
-
-      const searchContainer = searchInput.parentElement;
-      searchContainer.style.position = "relative";
-      searchContainer.appendChild(dropdown);
-    }
+    // Position the dropdown directly under the search input
+    const searchContainer = searchInput.parentElement;
+    searchContainer.style.position = "relative";
+    dropdown.style.top = `${searchInput.offsetHeight + 4}px`; // Add 4px spacing below the input
+    searchContainer.appendChild(dropdown);
   }
 
   /**
@@ -269,7 +231,7 @@ export class SearchAndSortComponent {
 
         if (query.length > 0) {
           // Navigate to listings page with search
-          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
         } else {
           clearTimeout(this.searchTimeout);
           this.performSearch(query);
@@ -335,7 +297,7 @@ export class SearchAndSortComponent {
           ${results.map((listing) => this.createDropdownItem(listing)).join("")}
           <div class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
             <button
-              onclick="window.location.href='/listings.html?search=${encodeURIComponent(query)}'"
+              onclick="window.location.href='/allListings.html?search=${encodeURIComponent(query)}'"
               class="w-full text-left px-2 py-2 text-sm text-pink-600 dark:text-pink-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center justify-center font-medium"
             >
               View all ${totalCount} results →
@@ -512,12 +474,12 @@ export class SearchAndSortComponent {
       }
 
       const responseData = await response.json();
-      const listings = responseData.data || [];
+      const allListings = responseData.data || [];
 
-      console.log("Search API returned", listings.length, "listings");
+      console.log("Search API returned", allListings.length, "listings");
 
       // Filter locally for more comprehensive search
-      const results = this.filterListings(listings, query);
+      const results = this.filterListings(allListings, query);
 
       // Cache the results
       this.cache.set(cacheKey, {
