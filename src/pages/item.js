@@ -201,11 +201,16 @@ function renderListing(listing) {
   sellerAvatar.src = sellerAvatarUrl;
   sellerAvatar.alt = `${listing.seller?.name || "Unknown"} avatar`;
 
-  // Make seller name clickable
-  const sellerProfileUrl = `/sellerProfile.html?name=${encodeURIComponent(
-    listing.seller?.name || "Unknown"
-  )}`;
-  sellerName.innerHTML = `<a href="${sellerProfileUrl}" class="text-pink-500 hover:underline">${listing.seller?.name || "Unknown Seller"}</a>`;
+  if (isAuthenticated()) {
+    // Make seller name clickable if the user is authenticated
+    const sellerProfileUrl = `/sellerProfile.html?name=${encodeURIComponent(
+      listing.seller?.name || "Unknown"
+    )}`;
+    sellerName.innerHTML = `<a href="${sellerProfileUrl}" class="text-pink-500 hover:underline">${listing.seller?.name || "Unknown Seller"}</a>`;
+  } else {
+    // Display seller name as plain text if the user is not authenticated
+    sellerName.textContent = listing.seller?.name || "Unknown Seller";
+  }
 
   // Add created date next to seller info
   const createdDate = new Date(listing.created).toLocaleDateString();

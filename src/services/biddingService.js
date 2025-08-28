@@ -39,7 +39,7 @@ export class BiddingService {
             "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
             Authorization: authHeader.Authorization,
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -130,7 +130,7 @@ export class BiddingService {
             Authorization: authHeader.Authorization,
           },
           body: JSON.stringify({ amount: parseInt(bidAmount) }),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -260,6 +260,104 @@ export class BiddingService {
       canBid: true,
     };
   }
+
+  /**
+   * Add credits to the seller when an auction is won
+   * @param {string} sellerName - The name of the seller
+   * @param {number} amount - The amount to add to the seller's credits
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async addCreditsToSeller(sellerName, amount) {
+    if (!isAuthenticated()) {
+      return {
+        success: false,
+        error: "You must be logged in to perform this action",
+      };
+    }
+
+    try {
+      const authHeader = getAuthHeader();
+      const response = await fetch(
+        `${API_BASE}/auction/profiles/${sellerName}/credits`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            Authorization: authHeader.Authorization,
+          },
+          body: JSON.stringify({ credits: amount }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return {
+          success: false,
+          error: errorData.message || "Failed to update seller's credits",
+        };
+      }
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error updating seller's credits:", error);
+      return {
+        success: false,
+        error: error.message || "An unexpected error occurred",
+      };
+    }
+  }
+
+  /**
+   * Refund credits to a user if they don't win the auction
+   * @param {string} userName - The name of the user to refund
+   * @param {number} amount - The amount to refund
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  async refundCreditsToUser(userName, amount) {
+    if (!isAuthenticated()) {
+      return {
+        success: false,
+        error: "You must be logged in to perform this action",
+      };
+    }
+
+    try {
+      const authHeader = getAuthHeader();
+      const response = await fetch(
+        `${API_BASE}/auction/profiles/${userName}/credits`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            Authorization: authHeader.Authorization,
+          },
+          body: JSON.stringify({ credits: amount }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return {
+          success: false,
+          error: errorData.message || "Failed to refund user's credits",
+        };
+      }
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error refunding user's credits:", error);
+      return {
+        success: false,
+        error: error.message || "An unexpected error occurred",
+      };
+    }
+  }
 }
 
 // Export a singleton instance
@@ -273,3 +371,30 @@ export const canUserBid = (listing) => biddingService.canUserBid(listing);
 export const getMinimumBid = (bids) => biddingService.getMinimumBid(bids);
 export const getCurrentUserCredits = () =>
   biddingService.getCurrentUserCredits();
+
+// Example auction end logic
+async function handleAuctionEnd(listingId, bids, sellerName) {
+  try {
+    // Find the highest bid
+    const highestBid = bids.reduce(
+      (max, bid) => (bid.amount > max.amount ? bid : max),
+      { amount: 0 }
+    );
+
+    // Update seller's credits with the highest bid amount
+    if (highestBid && highestBid.amount > 0) {
+      await biddingService.addCreditsToSeller(sellerName, highestBid.amount);
+    }
+
+    // Refund all other bidders
+    for (const bid of bids) {
+      if (bid.userName !== highestBid.userName) {
+        await biddingService.refundCreditsToUser(bid.userName, bid.amount);
+      }
+    }
+
+    console.log("Auction ended successfully");
+  } catch (error) {
+    console.error("Error handling auction end:", error);
+  }
+}

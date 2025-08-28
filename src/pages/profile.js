@@ -38,27 +38,43 @@ function renderProfileView(profile) {
       }</p>
     </div>
 
+    <!-- Stats Section -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-blue-100 dark:bg-blue-800 border border-gray-300 p-4 rounded-lg text-center">
+          <h4 class="text-lg font-semibold">Total Listings</h4>
+          <p class="text-2xl font-bold text-blue-600">${profile.listings?.length || 0}</p>
+        </div>
+        <div class="bg-purple-100 dark:bg-purple-800 border border-gray-300 p-4 rounded-lg text-center">
+          <h4 class="text-lg font-semibold">Credits</h4>
+          <p class="text-2xl font-bold text-purple-600">${profile.wins?.length || 0}</p>
+        </div>
+        <div class="bg-purple-100 dark:bg-purple-800 border border-gray-300 p-4 rounded-lg text-center">
+          <h4 class="text-lg font-semibold">Credits</h4>
+          <p class="text-2xl font-bold text-purple-600">${profile.credits || 0}</p>
+        </div>
+      </div>
+
     <div class="flex justify-center space-x-4 mb-6">
       <button id="newListingBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">New Listing</button>
       <button id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Edit Profile</button>
     </div>
 
+    <!-- Wins Section -->
     <div class="mb-6">
-      <h3 class="text-xl font-semibold mb-2">Wins</h3>
-      <ul class="list-disc list-inside bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
-        ${
-          profile.wins && profile.wins.length
-            ? profile.wins
-                .map(
-                  (win) =>
-                    `<li class="py-1 border-b border-gray-200 dark:border-gray-600 last:border-b-0">${
-                      win.title || win.id
-                    }</li>`
-                )
-                .join("")
-            : '<li class="text-gray-500 dark:text-gray-400">No wins yet.</li>'
-        }
-      </ul>
+      <h3 class="text-xl font-semibold mb-4">Wins</h3>
+      <div id="user-wins-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <!-- Wins will be inserted here by JavaScript -->
+      </div>
+      ${
+        profile.wins.length > 4
+          ? `
+          <div class="flex justify-center space-x-4 mt-4">
+            <button id="viewMoreWinsBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-md">View More</button>
+            <button id="viewLessWinsBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-md hidden">View Less</button>
+          </div>
+          `
+          : ""
+      }
     </div>
 
     ${
@@ -164,6 +180,53 @@ function renderProfileView(profile) {
           // Show "View More" button and hide "View Less" button
           viewMoreBtn.classList.remove("hidden");
           viewLessBtn.classList.add("hidden");
+        });
+      }
+    }
+  }
+
+  // Render the first 4 wins
+  if (profile.wins && profile.wins.length > 0) {
+    const winsContainer = document.getElementById("user-wins-container");
+    if (winsContainer) {
+      let currentWinsIndex = 4; // Start with the first 4 wins
+      const initialWins = profile.wins.slice(0, 4);
+      initialWins.forEach((win) => {
+        winsContainer.appendChild(createListingCard(win)); // Reuse the `createListingCard` function
+      });
+
+      const viewMoreWinsBtn = document.getElementById("viewMoreWinsBtn");
+      const viewLessWinsBtn = document.getElementById("viewLessWinsBtn");
+
+      if (viewMoreWinsBtn) {
+        viewMoreWinsBtn.addEventListener("click", () => {
+          const nextWins = profile.wins.slice(
+            currentWinsIndex,
+            currentWinsIndex + 4
+          );
+          nextWins.forEach((win) => {
+            winsContainer.appendChild(createListingCard(win));
+          });
+          currentWinsIndex += 4;
+
+          if (currentWinsIndex >= profile.wins.length) {
+            viewMoreWinsBtn.classList.add("hidden");
+          }
+          viewLessWinsBtn.classList.remove("hidden");
+        });
+      }
+
+      if (viewLessWinsBtn) {
+        viewLessWinsBtn.addEventListener("click", () => {
+          winsContainer.innerHTML = ""; // Clear the container
+          const initialWins = profile.wins.slice(0, 4);
+          initialWins.forEach((win) => {
+            winsContainer.appendChild(createListingCard(win));
+          });
+          currentWinsIndex = 4;
+
+          viewMoreWinsBtn.classList.remove("hidden");
+          viewLessWinsBtn.classList.add("hidden");
         });
       }
     }
@@ -306,7 +369,7 @@ async function fetchProfile(name) {
   if (!token) throw new Error("No token found");
 
   const res = await fetch(
-    `${API_BASE}/auction/profiles/${name}?_listings=true&_wins=true`,
+    `${API_BASE}/auction/profiles/${name}?_listings=true&_wins=true&_seller=true`, // Added `_seller=true`
     {
       headers: {
         "Content-Type": "application/json",

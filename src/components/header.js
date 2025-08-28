@@ -24,7 +24,7 @@ async function updateCreditsDisplay() {
 
           // Update all #user-credits elements
           creditsElements.forEach((element) => {
-            element.textContent = `${profile.credits} credits`;
+            element.textContent = `${profile.credits} credits`; // Display as plain text
             element.classList.remove("hidden");
           });
         }
@@ -84,11 +84,11 @@ function renderHeader() {
               ${
                 authenticated
                   ? `
-                <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                  currentPath === "/profile.html"
+                <a href="/profiles.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+                  currentPath === "/profiles.html"
                     ? "font-bold text-pink-600"
                     : ""
-                }">Profile</a>
+                }">Users</a>
               `
                   : ""
               }
@@ -109,12 +109,17 @@ function renderHeader() {
             ${
               authenticated
                 ? `
-              <div id="user-credits" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
-                Loading...
+              <div class="flex items-center space-x-4">
+                <span class="text-gray-700 dark:text-gray-300 text-sm">
+                  Hello, <a href="/profile.html" class="text-pink-500 font-bold hover:underline">${currentUser.name}</a>
+                </span>
+                <div id="user-credits" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                  Loading...
+                </div>
+                <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                  Logout
+                </button>
               </div>
-              <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
-                Logout
-              </button>
             `
                 : `
               <a href="/login.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors">Login</a>
@@ -162,7 +167,9 @@ function renderHeader() {
               ${
                 authenticated
                   ? `
-                <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+                <span class="text-gray-700 dark:text-gray-300 text-sm">
+                  Hello, <a href="/profile.html" class="text-pink-500 hover:underline">${currentUser.name}</a>
+                </span>
                 <div id="user-credits" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
                   Loading...
                 </div>
@@ -186,9 +193,7 @@ function renderHeader() {
               currentPath === "/index.html" ? "font-bold text-pink-600" : ""
             }">Home</a>
             <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
-              currentPath === "/listings.html"
-                ? "font-bold text-pink-600"
-                : ""
+              currentPath === "/listings.html" ? "font-bold text-pink-600" : ""
             }">Auctions</a>
             ${
               authenticated

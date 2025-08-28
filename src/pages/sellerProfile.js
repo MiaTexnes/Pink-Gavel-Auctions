@@ -127,9 +127,9 @@ function renderSellerProfile(profile) {
           <h4 class="text-lg font-semibold">Total Listings</h4>
           <p class="text-2xl font-bold text-blue-600">${profile.listings?.length || 0}</p>
         </div>
-        <div class="bg-green-100 dark:bg-green-800 border border-gray-300 p-4 rounded-lg text-center">
-          <h4 class="text-lg font-semibold">Total Wins</h4>
-          <p class="text-2xl font-bold text-green-600">${profile.wins?.length || 0}</p>
+        <div class="bg-purple-100 dark:bg-purple-800 border border-gray-300 p-4 rounded-lg text-center">
+          <h4 class="text-lg font-semibold">Credits</h4>
+          <p class="text-2xl font-bold text-purple-600">${profile.wins?.length || 0}</p>
         </div>
         <div class="bg-purple-100 dark:bg-purple-800 border border-gray-300 p-4 rounded-lg text-center">
           <h4 class="text-lg font-semibold">Credits</h4>
