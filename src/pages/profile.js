@@ -29,18 +29,20 @@ function renderProfileView(profile) {
       <h2 class="text-3xl font-bold mb-2">${profile.name}</h2>
       <p class="text-gray-600 dark:text-gray-300">${profile.email}</p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center mb-6">
-      <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
-        <p class="text-lg font-semibold">Credits</p>
-        <p class="text-2xl text-pink-600 font-bold">${profile.credits}</p>
-      </div>
-      <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
-        <p class="text-lg font-semibold">Listings</p>
-        <p class="text-2xl text-pink-600 font-bold">${
-          profile._count.listings
-        }</p>
-      </div>
+
+    <!-- User Bio Section -->
+    <div class="mb-6 text-center">
+      <h3 class="text-xl font-semibold mb-2">User Bio</h3>
+      <p class="text-gray-700 dark:text-gray-300">${
+        profile.bio || "No bio provided."
+      }</p>
     </div>
+
+    <div class="flex justify-center space-x-4 mb-6">
+      <button id="newListingBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">New Listing</button>
+      <button id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Edit Profile</button>
+    </div>
+
     <div class="mb-6">
       <h3 class="text-xl font-semibold mb-2">Wins</h3>
       <ul class="list-disc list-inside bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-xs">
@@ -58,6 +60,7 @@ function renderProfileView(profile) {
         }
       </ul>
     </div>
+
     ${
       profile.listings && profile.listings.length > 0
         ? `
@@ -66,6 +69,16 @@ function renderProfileView(profile) {
         <div id="user-listings-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <!-- Listings will be inserted here by JavaScript -->
         </div>
+        ${
+          profile.listings.length > 4
+            ? `
+            <div class="flex justify-center space-x-4 mt-4">
+              <button id="viewMoreBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-md">View More</button>
+              <button id="viewLessBtn" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-all shadow-md hidden">View Less</button>
+            </div>
+            `
+            : ""
+        }
       </div>
     `
         : `
@@ -75,32 +88,26 @@ function renderProfileView(profile) {
     `
     }
 
-    <div class="flex justify-center space-x-4">
-      <button id="newListingBtn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">New Listing</button>
-      <button id="editProfileBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors">Edit Profile</button>
-      <button id="logoutBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors">Logout</button>
-    </div>
-
     <div id="newListingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 relative">
-        <button id="closeNewListingModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
+        <button id="closeNewListingModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
         <h2 class="text-2xl font-bold mb-4">Create New Listing</h2>
         <form id="newListingForm" class="space-y-4">
           <div>
             <label for="listingTitle" class="block mb-1 font-semibold">Title</label>
-            <input type="text" id="listingTitle" name="title" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+            <input type="text" id="listingTitle" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
           </div>
           <div>
             <label for="listingDesc" class="block mb-1 font-semibold">Description</label>
-            <textarea id="listingDesc" name="description" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" rows="3" required></textarea>
+            <textarea id="listingDesc" name="description" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" rows="3" required></textarea>
           </div>
           <div>
             <label for="listingEndDate" class="block mb-1 font-semibold">End Date</label>
-            <input type="datetime-local" id="listingEndDate" name="endsAt" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+            <input type="datetime-local" id="listingEndDate" name="endsAt" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
           </div>
           <div>
             <label for="listingImage" class="block mb-1 font-semibold">Image URL</label>
-            <input type="url" id="listingImage" name="media" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+            <input type="url" id="listingImage" name="media" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
           </div>
           <div class="flex justify-end space-x-2">
             <button type="button" id="cancelNewListingBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
@@ -111,22 +118,60 @@ function renderProfileView(profile) {
     </div>
   `;
 
-  // Render user listings using the reusable card function
+  // Render the first 4 listings
   if (profile.listings && profile.listings.length > 0) {
     const userListingsContainer = document.getElementById(
       "user-listings-container"
     );
     if (userListingsContainer) {
-      profile.listings.forEach((listing) => {
+      const initialListings = profile.listings.slice(0, 4);
+      initialListings.forEach((listing) => {
         userListingsContainer.appendChild(createListingCard(listing));
       });
+
+      // Add event listeners for "View More" and "View Less" buttons
+      const viewMoreBtn = document.getElementById("viewMoreBtn");
+      const viewLessBtn = document.getElementById("viewLessBtn");
+      let currentIndex = 4; // Start after the first 4 listings
+
+      if (viewMoreBtn) {
+        viewMoreBtn.addEventListener("click", () => {
+          const nextListings = profile.listings.slice(
+            currentIndex,
+            profile.listings.length
+          );
+          nextListings.forEach((listing) => {
+            userListingsContainer.appendChild(createListingCard(listing));
+          });
+          currentIndex = profile.listings.length;
+
+          // Show "View Less" button and hide "View More" button
+          viewMoreBtn.classList.add("hidden");
+          viewLessBtn.classList.remove("hidden");
+        });
+      }
+
+      if (viewLessBtn) {
+        viewLessBtn.addEventListener("click", () => {
+          // Remove all listings and re-render the first 4
+          userListingsContainer.innerHTML = "";
+          const initialListings = profile.listings.slice(0, 4);
+          initialListings.forEach((listing) => {
+            userListingsContainer.appendChild(createListingCard(listing));
+          });
+          currentIndex = 4;
+
+          // Show "View More" button and hide "View Less" button
+          viewMoreBtn.classList.remove("hidden");
+          viewLessBtn.classList.add("hidden");
+        });
+      }
     }
   }
 
   document
     .getElementById("editProfileBtn")
     .addEventListener("click", () => renderProfileEditForm(profile));
-  document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 
   // Set minimum date for listing end date
   const listingEndDate = document.getElementById("listingEndDate");
@@ -191,28 +236,20 @@ function renderProfileEditForm(profile) {
           <img id="avatar-preview" src="${
             profile.avatar?.url || "https://placehold.co/150x150?text=Avatar"
           }" alt="Avatar" class="w-32 h-32 rounded-full mb-4 object-cover border-4 border-pink-500">
-          <input type="url" id="avatar" name="avatar" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Avatar URL" value="${
+          <h3 class="text-lg font-semibold mb-2">Change Profile Picture</h3>
+          <input type="url" id="avatar" name="avatar" class="w-full border-gray-300 px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Avatar URL" value="${
             profile.avatar?.url || ""
           }">
         </div>
+
+        <!-- User Bio Section -->
         <div>
-          <label for="name" class="block mb-1 font-semibold">Name</label>
-          <input type="text" id="name" name="name" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
-            profile.name
-          }" readonly>
+          <h3 class="text-lg font-semibold mb-2">Update Bio</h3>
+          <textarea id="bio" name="bio" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" rows="4" placeholder="Write something about yourself...">${
+            profile.bio || ""
+          }</textarea>
         </div>
-        <div>
-          <label class="block mb-1 font-semibold">Email</label>
-          <input type="email" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
-            profile.email
-          }" readonly>
-        </div>
-        <div>
-          <label class="block mb-1 font-semibold">Credits</label>
-          <input type="text" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
-            profile.credits
-          }" readonly>
-        </div>
+
         <div class="flex justify-center space-x-4 mt-6">
           <button type="submit" class="bg-pink-300 hover:bg-pink-200 text-black font-semibold py-2 px-6 rounded-lg transition-colors">Save Changes</button>
           <button type="button" id="cancelEditBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg transition-colors">Cancel</button>
@@ -239,27 +276,23 @@ function renderProfileEditForm(profile) {
     .getElementById("profile-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = document.getElementById("name").value.trim();
       const avatar = document.getElementById("avatar").value.trim();
-      if (name !== profile.name) {
-        showMessage(
-          "error",
-          "You can only change your avatar. Username cannot be changed."
-        );
-        return;
-      }
+      const bio = document.getElementById("bio").value.trim();
+
       try {
-        const updatedAvatar = avatar !== profile.avatar?.url ? avatar : null;
-        if (updatedAvatar !== null) {
-          await updateAvatar({ avatar: updatedAvatar, name: profile.name });
-        }
+        // Call the updateProfile function
+        await updateProfile({ avatar, bio, name: profile.name });
+
+        // Fetch the updated profile and refresh the view
         const refreshedProfile = await fetchProfile(profile.name);
         showMessage("success", "Profile updated successfully!");
         renderProfileView(refreshedProfile);
+
         // Update localStorage user for header/other components
         const user = getCurrentUser();
         if (user) {
           user.avatar = refreshedProfile.avatar;
+          user.bio = refreshedProfile.bio;
           localStorage.setItem("user", JSON.stringify(user));
         }
       } catch (err) {
@@ -310,7 +343,12 @@ async function updateAvatar({ avatar, name }) {
       "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ avatar: { url: avatar, alt: "" } }),
+    body: JSON.stringify({
+      avatar: {
+        url: avatar, // Ensure the avatar URL is sent in the correct format
+        alt: "User avatar", // Optional: Add an alt text for the avatar
+      },
+    }),
   });
 
   if (!res.ok) {
@@ -342,6 +380,35 @@ async function createListing({ title, description, endsAt, media }) {
     const errorData = await res.json();
     throw new Error(
       errorData.errors?.[0]?.message || "Failed to create listing"
+    );
+  }
+
+  const responseData = await res.json();
+  return responseData.data;
+}
+
+async function updateProfile({ avatar, bio, name }) {
+  const token = localStorage.getItem("token");
+  if (!token) throw new Error("No token found");
+
+  const body = {};
+  if (avatar) body.avatar = { url: avatar, alt: "User avatar" };
+  if (bio) body.bio = bio;
+
+  const res = await fetch(`${API_BASE}/auction/profiles/${name}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(
+      errorData.errors?.[0]?.message || "Failed to update profile"
     );
   }
 

@@ -44,12 +44,15 @@ function showError(message) {
 
 export function createListingCard(listing) {
   const endDate = new Date(listing.endsAt);
+  const createdDate = new Date(listing.created); // Get the created date
   const now = new Date();
   const timeLeftMs = endDate.getTime() - now.getTime();
 
   let timeLeftString;
+  let timeLeftClass = ""; // Add a class for styling
   if (timeLeftMs < 0) {
     timeLeftString = "Ended";
+    timeLeftClass = "underline text-red-700 dark:text-red-400 font-semibold"; // Add underline and red color
   } else {
     const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor(
@@ -57,6 +60,7 @@ export function createListingCard(listing) {
     );
     const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
     timeLeftString = `Ends: ${days}d ${hours}h ${minutes}m`;
+    timeLeftClass = "text-green-500 dark:text-green-400"; // Green color for active listings
   }
 
   const imageUrl =
@@ -72,16 +76,13 @@ export function createListingCard(listing) {
 
   const card = document.createElement("a");
   card.href = `/item.html?id=${listing.id}`;
-  // Fixed card dimensions with consistent height
   card.className =
-    "block bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1 border border-gray-100 dark:border-gray-700";
+    "border border-gray-300 block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl hover:shadow-black transition-shadow duration-200 overflow-hidden w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1";
 
-  // Set fixed height using inline style to ensure consistency
   card.style.height = "420px";
   card.style.minHeight = "420px";
   card.style.maxHeight = "420px";
 
-  // Template with absolutely fixed sizing - ensuring all cards are identical
   card.innerHTML = `
     ${
       imageUrl
@@ -98,12 +99,12 @@ export function createListingCard(listing) {
         listing.description || "No description provided."
       }</p>
       <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
-        <span class="font-medium ${timeLeftMs < 0 ? "text-red-500 dark:text-red-400" : timeLeftMs < 24 * 60 * 60 * 1000 ? "text-orange-500 dark:text-orange-400" : "text-green-500 dark:text-green-400"} transition-colors duration-200 truncate" style="max-width: 60%;">${timeLeftString}</span>
-        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105 flex-shrink-0">Bids: ${listing._count?.bids || 0}</span>
-      </div>
-      <div class="flex items-center space-x-2 flex-shrink-0 transition-all duration-200 hover:translate-x-1" style="height: 32px; min-height: 32px; max-height: 32px;">
+        <span class="text-gray-600 dark:text-gray-400">Created: ${createdDate.toLocaleDateString()} By ${sellerName}</span>
         <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
-        <span class="text-gray-800 dark:text-gray-200 font-medium truncate transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400 min-w-0" style="max-width: calc(100% - 40px);">${sellerName}</span>
+      </div>
+      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
+        <span class="font-medium ${timeLeftClass} transition-colors duration-200 truncate" style="max-width: 60%;">${timeLeftString}</span>
+        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105 flex-shrink-0">Bids: ${listing._count?.bids || 0}</span>
       </div>
     </div>
   `;

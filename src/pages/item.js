@@ -200,7 +200,20 @@ function renderListing(listing) {
     listing.seller?.avatar?.url || "https://placehold.co/48x48?text=S";
   sellerAvatar.src = sellerAvatarUrl;
   sellerAvatar.alt = `${listing.seller?.name || "Unknown"} avatar`;
-  sellerName.textContent = listing.seller?.name || "Unknown Seller";
+
+  // Make seller name clickable
+  const sellerProfileUrl = `/sellerProfile.html?name=${encodeURIComponent(
+    listing.seller?.name || "Unknown"
+  )}`;
+  sellerName.innerHTML = `<a href="${sellerProfileUrl}" class="text-pink-500 hover:underline">${listing.seller?.name || "Unknown Seller"}</a>`;
+
+  // Add created date next to seller info
+  const createdDate = new Date(listing.created).toLocaleDateString();
+  const createdDateElement = document.createElement("span");
+  createdDateElement.className =
+    "text-sm text-gray-500 dark:text-gray-400 ml-4";
+  createdDateElement.textContent = `Created: ${createdDate}`;
+  sellerName.parentElement.appendChild(createdDateElement);
 
   // Set bid information using the service
   const bids = listing.bids || [];

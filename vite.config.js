@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import { register } from "module";
 
 export default defineConfig({
   server: {
@@ -19,6 +20,7 @@ export default defineConfig({
         login: resolve(__dirname, "login.html"),
         profile: resolve(__dirname, "profile.html"),
         register: resolve(__dirname, "register.html"),
+        sellerProfile: resolve(__dirname, "sellerProfile.html"),
       },
     },
   },
