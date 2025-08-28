@@ -231,7 +231,7 @@ export class SearchAndSortComponent {
 
         if (query.length > 0) {
           // Navigate to listings page with search
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         } else {
           clearTimeout(this.searchTimeout);
           this.performSearch(query);
@@ -297,7 +297,7 @@ export class SearchAndSortComponent {
           ${results.map((listing) => this.createDropdownItem(listing)).join("")}
           <div class="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
             <button
-              onclick="window.location.href='/allListings.html?search=${encodeURIComponent(query)}'"
+              onclick="window.location.href='/listings.html?search=${encodeURIComponent(query)}'"
               class="w-full text-left px-2 py-2 text-sm text-pink-600 dark:text-pink-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center justify-center font-medium"
             >
               View all ${totalCount} results →

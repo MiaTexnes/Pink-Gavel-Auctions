@@ -76,8 +76,8 @@ function renderHeader() {
               <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
                 currentPath === "/index.html" ? "font-bold text-pink-600" : ""
               }">Home</a>
-              <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath === "/allListings.html"
+              <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+                currentPath === "/listings.html"
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
@@ -185,8 +185,8 @@ function renderHeader() {
             <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
               currentPath === "/index.html" ? "font-bold text-pink-600" : ""
             }">Home</a>
-            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
-              currentPath === "/allListings.html"
+            <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
+              currentPath === "/listings.html"
                 ? "font-bold text-pink-600"
                 : ""
             }">Auctions</a>
@@ -250,7 +250,7 @@ function setupEventListeners() {
       if (headerSearch) {
         const query = headerSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });
@@ -264,7 +264,7 @@ function setupEventListeners() {
         e.preventDefault();
         const query = headerSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });
@@ -278,7 +278,7 @@ function setupEventListeners() {
         e.preventDefault();
         const query = mobileSearch.value.trim();
         if (query.length > 0) {
-          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+          window.location.href = `/listings.html?search=${encodeURIComponent(query)}`;
         }
       }
     });
