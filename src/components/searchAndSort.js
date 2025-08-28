@@ -52,53 +52,15 @@ export class SearchAndSortComponent {
     const dropdown = document.createElement("div");
     dropdown.id = dropdownId;
 
-    if (dropdownId === "header-search-dropdown") {
-      // For header search, find the outer container that has responsive classes
-      let searchContainer = searchInput.parentElement;
+    // Common dropdown styling
+    dropdown.className =
+      "absolute bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-full";
 
-      // Look for the container with "hidden md:flex" classes
-      while (
-        searchContainer &&
-        !searchContainer.classList.contains("md:flex")
-      ) {
-        searchContainer = searchContainer.parentElement;
-        // Safety check to avoid infinite loop
-        if (searchContainer === document.body) {
-          searchContainer = null;
-          break;
-        }
-      }
-
-      if (searchContainer && searchContainer.classList.contains("md:flex")) {
-        // Position the dropdown relative to the outer container
-        dropdown.className =
-          "absolute left-0 mt-21 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
-
-        searchContainer.style.position = "relative";
-        searchContainer.appendChild(dropdown);
-      } else {
-        // Fallback: use fixed positioning
-        dropdown.className =
-          "fixed bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto w-80";
-
-        document.body.appendChild(dropdown);
-
-        // Store position update function
-        dropdown._updatePosition = () => {
-          const rect = searchInput.getBoundingClientRect();
-          dropdown.style.top = `${rect.bottom + 8}px`;
-          dropdown.style.left = `${rect.left}px`;
-        };
-      }
-    } else {
-      // Mobile search positioning remains the same
-      dropdown.className =
-        "absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-[60] hidden max-h-80 overflow-y-auto";
-
-      const searchContainer = searchInput.parentElement;
-      searchContainer.style.position = "relative";
-      searchContainer.appendChild(dropdown);
-    }
+    // Position the dropdown directly under the search input
+    const searchContainer = searchInput.parentElement;
+    searchContainer.style.position = "relative";
+    dropdown.style.top = `${searchInput.offsetHeight + 4}px`; // Add 4px spacing below the input
+    searchContainer.appendChild(dropdown);
   }
 
   /**
@@ -212,7 +174,7 @@ export class SearchAndSortComponent {
         "bg-gray-200",
         "dark:bg-gray-700",
         "text-gray-700",
-        "dark:text-gray-300",
+        "dark:text-gray-300"
       );
     });
 
@@ -220,7 +182,7 @@ export class SearchAndSortComponent {
       "bg-gray-200",
       "dark:bg-gray-700",
       "text-gray-700",
-      "dark:text-gray-300",
+      "dark:text-gray-300"
     );
     activeButton.classList.add("bg-pink-500", "text-white");
   }
@@ -442,7 +404,7 @@ export class SearchAndSortComponent {
       "Performing search for:",
       query,
       "with sort:",
-      this.currentSort,
+      this.currentSort
     );
 
     try {
@@ -504,7 +466,7 @@ export class SearchAndSortComponent {
 
       const response = await fetch(
         `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
-        { headers },
+        { headers }
       );
 
       if (!response.ok) {
@@ -577,22 +539,22 @@ export class SearchAndSortComponent {
         // First filter to only active auctions, then sort by ending soon
         const activeAuctions = this.filterActiveAuctions(sorted);
         return activeAuctions.sort(
-          (a, b) => new Date(a.endsAt) - new Date(b.endsAt),
+          (a, b) => new Date(a.endsAt) - new Date(b.endsAt)
         );
 
       case "most-bids":
         return sorted.sort(
-          (a, b) => (b._count?.bids || 0) - (a._count?.bids || 0),
+          (a, b) => (b._count?.bids || 0) - (a._count?.bids || 0)
         );
 
       case "title-az":
         return sorted.sort((a, b) =>
-          (a.title || "").localeCompare(b.title || ""),
+          (a.title || "").localeCompare(b.title || "")
         );
 
       case "title-za":
         return sorted.sort((a, b) =>
-          (b.title || "").localeCompare(a.title || ""),
+          (b.title || "").localeCompare(a.title || "")
         );
 
       default:
