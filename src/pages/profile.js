@@ -23,6 +23,9 @@ function showMessage(type, message) {
 function renderProfileView(profile) {
   profileContainer.innerHTML = `
     <!-- Profile Header -->
+    <div class="text-left mb-6">
+      <h1 class="text-4xl font-bold dark:text-white text-black">My Profile</h1>
+    </div>
     <div class="flex flex-col md:flex-row items-center md:items-start mb-6">
       <!-- Profile Image -->
       <div class="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
@@ -114,22 +117,16 @@ function renderProfileView(profile) {
         <form id="editProfileForm" class="space-y-4">
           <div>
             <label for="editAvatar" class="block mb-1 font-semibold">Avatar URL</label>
-            <input type="url" id="editAvatar" name="avatar" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" value="${
-              profile.avatar?.url || ""
-            }">
+            <input
+              type="url"
+              id="editAvatar"
+              name="avatar"
+              class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+              placeholder="Enter the avatar URL"
+              required
+            />
           </div>
-          <div>
-            <label for="editName" class="block mb-1 font-semibold">Name</label>
-            <input type="text" id="editName" name="name" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
-              profile.name
-            }" readonly>
-          </div>
-          <div>
-            <label for="editEmail" class="block mb-1 font-semibold">Email</label>
-            <input type="email" id="editEmail" name="email" class="w-full px-3 py-2 border rounded-sm bg-gray-100 dark:bg-gray-700 text-gray-500" value="${
-              profile.email
-            }" readonly>
-          </div>
+
           <div class="flex justify-end space-x-4">
             <button type="button" id="cancelEditProfileBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Save</button>
@@ -146,19 +143,45 @@ function renderProfileView(profile) {
         <form id="newListingForm" class="space-y-4">
           <div>
             <label for="listingTitle" class="block mb-1 font-semibold">Title</label>
-            <input type="text" id="listingTitle" name="title" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+            <input
+              type="text"
+              id="listingTitle"
+              name="title"
+              class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+              placeholder="Enter the title"
+              required
+            />
           </div>
           <div>
             <label for="listingDesc" class="block mb-1 font-semibold">Description</label>
-            <textarea id="listingDesc" name="description" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" rows="3" required></textarea>
+            <textarea
+              id="listingDesc"
+              name="description"
+              class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+              rows="3"
+              placeholder="Enter the description"
+              required
+            ></textarea>
           </div>
           <div>
             <label for="listingEndDate" class="block mb-1 font-semibold">Ends At</label>
-            <input type="datetime-local" id="listingEndDate" name="endsAt" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white" required>
+            <input
+              type="datetime-local"
+              id="listingEndDate"
+              name="endsAt"
+              class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+              required
+            />
           </div>
           <div>
             <label for="listingImage" class="block mb-1 font-semibold">Image URL</label>
-            <input type="url" id="listingImage" name="image" class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white">
+            <input
+              type="url"
+              id="listingImage"
+              name="image"
+              class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
+              placeholder="Enter the image URL"
+            />
           </div>
           <div class="flex justify-end space-x-4">
             <button type="button" id="cancelNewListingBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
@@ -173,12 +196,12 @@ function renderProfileView(profile) {
       id="profileImageModal"
       class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 hidden"
     >
-      <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 max-w-[90%] max-h-[90%]">
+      <div class="relative dark:bg-gray-800 p-4">
         <img
           id="profileImageModalContent"
           src="${profile.avatar?.url || "https://placehold.co/150x150?text=Avatar"}"
           alt="Avatar"
-          class=" max-w-20 max-h-20 object-contain rounded-lg cursor-pointer"
+          class="w-72 h-72 object-contain cursor-pointer"
         />
       </div>
     </div>
