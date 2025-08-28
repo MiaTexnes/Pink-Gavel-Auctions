@@ -11,10 +11,8 @@ let userCredits = null;
 
 // Function to update credits display
 async function updateCreditsDisplay() {
-  const creditsElement = document.getElementById("user-credits"); // Desktop credits display
-  const mobileCreditsElement = document.getElementById("mobile-user-credits"); // Mobile credits display
-
-  if (!creditsElement && !mobileCreditsElement) return;
+  const creditsElements = document.querySelectorAll("#user-credits"); // Select all instances of #user-credits
+  if (!creditsElements.length) return;
 
   if (isAuthenticated()) {
     const currentUser = getCurrentUser();
@@ -24,30 +22,26 @@ async function updateCreditsDisplay() {
         if (profile && typeof profile.credits === "number") {
           userCredits = profile.credits;
 
-          // Update desktop credits display
-          if (creditsElement) {
-            creditsElement.textContent = `${profile.credits} credits`;
-            creditsElement.classList.remove("hidden");
-          }
-
-          // Update mobile credits display
-          if (mobileCreditsElement) {
-            mobileCreditsElement.textContent = `${profile.credits} credits`;
-            mobileCreditsElement.classList.remove("hidden");
-          }
+          // Update all #user-credits elements
+          creditsElements.forEach((element) => {
+            element.textContent = `${profile.credits} credits`;
+            element.classList.remove("hidden");
+          });
         }
       } catch (error) {
         console.error("Error updating credits:", error);
 
-        // Hide credits on error
-        if (creditsElement) creditsElement.classList.add("hidden");
-        if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
+        // Hide all #user-credits elements on error
+        creditsElements.forEach((element) => {
+          element.classList.add("hidden");
+        });
       }
     }
   } else {
-    // Hide credits if not authenticated
-    if (creditsElement) creditsElement.classList.add("hidden");
-    if (mobileCreditsElement) mobileCreditsElement.classList.add("hidden");
+    // Hide all #user-credits elements if not authenticated
+    creditsElements.forEach((element) => {
+      element.classList.add("hidden");
+    });
   }
 }
 
@@ -60,20 +54,19 @@ function renderHeader() {
   const authenticated = isAuthenticated();
   const currentUser = authenticated ? getCurrentUser() : null;
 
-  // Get the current page URL and normalize it
-  const currentPath = window.location.pathname.toLowerCase();
+  // Get the current page URL
+  const currentPath = window.location.pathname;
 
   return `
     <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
-      <div class="container mx-auto px-4">
+      <div class="mx-2 px-4">
         <div class="flex justify-between items-center py-4">
-
           <!-- Left Side: Logo and Navigation -->
           <div class="flex items-center space-x-6">
             <!-- Logo -->
             <div class="flex items-center space-x-3">
               <a href="/index.html" class="flex items-center space-x-2">
-                <img src="/assets/images/logo.png" alt="Logo of a Pink Gavel" class="h-8 w-8">
+                <img src="/assets/images/logo.png" alt="Pink Gavel Auctions" class="h-8 w-8">
                 <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
               </a>
             </div>
@@ -81,12 +74,10 @@ function renderHeader() {
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-6">
               <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/index.html")
-                  ? "font-bold text-pink-600"
-                  : ""
+                currentPath === "/index.html" ? "font-bold text-pink-600" : ""
               }">Home</a>
-              <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                currentPath.includes("/listings.html")
+              <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
+                currentPath === "/allListings.html"
                   ? "font-bold text-pink-600"
                   : ""
               }">Auctions</a>
@@ -94,7 +85,7 @@ function renderHeader() {
                 authenticated
                   ? `
                 <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-                  currentPath.includes("/profile.html")
+                  currentPath === "/profile.html"
                     ? "font-bold text-pink-600"
                     : ""
                 }">Profile</a>
@@ -166,11 +157,22 @@ function renderHeader() {
               >
             </div>
 
-            <!-- Dark Mode Toggle -->
-            <div class="flex justify-center mb-3">
+            <!-- Mobile Top Section: Hello, Credits, and Dark Mode -->
+            <div class="flex justify-center items-center space-x-4">
+              ${
+                authenticated
+                  ? `
+                <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
+                <div id="user-credits" class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                  Loading...
+                </div>
+                `
+                  : ""
+              }
+              <!-- Dark mode toggle always visible in mobile menu -->
               <button
                 onclick="window.toggleDarkMode()"
-                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-black dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 aria-label="Toggle dark mode"
               >
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -180,39 +182,21 @@ function renderHeader() {
               </button>
             </div>
 
-            <!-- User Info and Credits -->
-            ${
-              authenticated
-                ? `
-              <div class="pt-2 border-t border-gray-200 dark:border-gray-600 flex flex-col space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-700 dark:text-gray-300 text-sm">Hello, ${currentUser.name}</span>
-                  <div id="mobile-user-credits" class="hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
-                    Loading...
-                  </div>
-                </div>
-              </div>
-            `
-                : ""
-            }
-
-            <!-- Navigation Links -->
-            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-              currentPath.includes("/index.html")
-                ? "font-bold text-pink-600"
-                : ""
+            <a href="/index.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
+              currentPath === "/index.html" ? "font-bold text-pink-600" : ""
             }">Home</a>
-            <a href="/listings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors ${
-              currentPath.includes("/listings.html")
+            <a href="/allListings.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
+              currentPath === "/allListings.html"
                 ? "font-bold text-pink-600"
                 : ""
             }">Auctions</a>
-
-            <!-- Logout Button -->
             ${
               authenticated
                 ? `
-              <button id="logout-btn-mobile" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+              <a href="/profile.html" class="text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors py-2 ${
+                currentPath === "/profile.html" ? "font-bold text-pink-600" : ""
+              }">Profile</a>
+              <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
                 Logout
               </button>
             `
@@ -238,9 +222,11 @@ function setupEventListeners() {
   const mobileMenu = document.getElementById("mobile-menu");
 
   if (mobileMenuBtn && mobileMenu) {
+    console.log("Setting up mobile menu toggle");
     mobileMenuBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
+      console.log("Mobile menu button clicked");
       mobileMenu.classList.toggle("hidden");
 
       // Update credits display when the mobile menu is opened
@@ -248,9 +234,57 @@ function setupEventListeners() {
         await updateCreditsDisplay();
       }
     });
+  } else {
+    console.error("Mobile menu elements not found:", {
+      mobileMenuBtn,
+      mobileMenu,
+    });
   }
 
-  // Logout functionality for desktop
+  // Header search button functionality
+  const headerSearchBtn = document.getElementById("header-search-btn");
+  if (headerSearchBtn) {
+    headerSearchBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const headerSearch = document.getElementById("header-search");
+      if (headerSearch) {
+        const query = headerSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+  }
+
+  // Add Enter key functionality for header search
+  const headerSearch = document.getElementById("header-search");
+  if (headerSearch) {
+    headerSearch.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = headerSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+  }
+
+  // Add Enter key functionality for mobile search (no button needed)
+  const mobileSearch = document.getElementById("mobile-search");
+  if (mobileSearch) {
+    mobileSearch.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const query = mobileSearch.value.trim();
+        if (query.length > 0) {
+          window.location.href = `/allListings.html?search=${encodeURIComponent(query)}`;
+        }
+      }
+    });
+  }
+
+  // Logout functionality
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
@@ -259,24 +293,13 @@ function setupEventListeners() {
     });
   }
 
-  // Logout functionality for mobile
-  const logoutBtnMobile = document.getElementById("logout-btn-mobile");
-  if (logoutBtnMobile) {
-    logoutBtnMobile.addEventListener("click", (e) => {
-      e.preventDefault();
-      logoutUser();
-    });
-  }
-
-  // Dark mode toggle
-  const darkModeToggle = document.querySelector(
-    '[onclick="window.toggleDarkMode()"]'
-  );
-  if (darkModeToggle) {
-    darkModeToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      window.toggleDarkMode();
-    });
+  // Initialize search and sort component
+  console.log("Initializing search and sort component...");
+  try {
+    searchAndSortComponent.init();
+    console.log("✅ Search and sort component initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize search and sort component:", error);
   }
 }
 
