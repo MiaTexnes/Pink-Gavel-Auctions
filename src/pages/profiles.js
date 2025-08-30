@@ -216,9 +216,9 @@ class UIManager {
         <img src="${avatarUrl}"
              alt="${profile.name}'s avatar"
              class="w-16 h-16 rounded-full object-cover border-2 border-pink-500">
-        <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">${profile.name}</h2>
-          <p class="text-gray-700 dark:text-gray-400">${profile.email || "Email not available"}</p>
+        <div class="flex-1 min-w-0">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white truncate">${profile.name}</h2>
+          <p class="text-gray-700 dark:text-gray-400 break-all text-sm">${profile.email || "Email not available"}</p>
         </div>
       </div>
       <div class="mt-4 grid grid-cols-2 gap-4">
