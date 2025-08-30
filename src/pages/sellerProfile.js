@@ -167,6 +167,9 @@ class UIManager {
       return;
     }
 
+    // Update the document title with the seller's name
+    document.title = `${profile.name} - Seller Profile | Pink Gavel Auctions`;
+
     container.innerHTML = this.generateProfileHTML(profile);
     this.setupEventListeners();
     this.renderInitialItems();
