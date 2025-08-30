@@ -56,7 +56,7 @@ function renderHeader() {
   const currentPath = window.location.pathname;
 
   return `
-    <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
+    <nav class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-500 dark:border-gray-700">
       <div class="mx-2 px-4">
         <div class="flex justify-between items-center py-4">
           <!-- Left Side: Logo and Navigation -->
