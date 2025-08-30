@@ -1,7 +1,5 @@
-import { AUTH_ENDPOINTS } from "../services/baseApi.js";
+import { AUTH_ENDPOINTS, API_BASE_URL } from "../services/baseApi.js"; // Add API_BASE_URL import
 import { config } from "../services/config.js";
-
-const API_BASE = "https://v2.api.noroff.dev";
 
 export async function loginUser(userData) {
   try {
@@ -137,7 +135,7 @@ export async function getUserProfile(name) {
   try {
     const authHeader = getAuthHeader();
     const response = await fetch(
-      `${API_BASE}/auction/profiles/${name}?_listings=true&_wins=true`,
+      `${API_BASE_URL}/auction/profiles/${name}?_listings=true&_wins=true`, // Use API_BASE_URL instead of API_BASE
       {
         headers: {
           "Content-Type": "application/json",

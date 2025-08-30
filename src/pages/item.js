@@ -11,9 +11,9 @@ import {
 } from "../services/biddingService.js";
 import { searchAndSortComponent } from "../components/searchAndSort.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
-const API_BASE = "https://v2.api.noroff.dev";
 const DEFAULT_AVATAR = "https://placehold.co/48x48?text=S";
 const DEFAULT_BIDDER_AVATAR = "https://placehold.co/40x40?text=B";
 const DEFAULT_IMAGE = "https://placehold.co/600x400?text=No+Image";
@@ -454,7 +454,7 @@ class APIService {
     }
 
     const response = await fetch(
-      `${API_BASE}/auction/listings/${id}?_seller=true&_bids=true`,
+      `${API_BASE_URL}/auction/listings/${id}?_seller=true&_bids=true`, // Use API_BASE_URL instead of API_BASE
       { headers }
     );
 
@@ -481,7 +481,8 @@ class APIService {
     }
 
     const authHeader = getAuthHeader();
-    const response = await fetch(`${API_BASE}/auction/listings/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/auction/listings/${id}`, {
+      // Use API_BASE_URL instead of API_BASE
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -504,7 +505,8 @@ class APIService {
     }
 
     const authHeader = getAuthHeader();
-    const response = await fetch(`${API_BASE}/auction/listings/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/auction/listings/${id}`, {
+      // Use API_BASE_URL instead of API_BASE
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

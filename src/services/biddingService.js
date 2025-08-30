@@ -5,8 +5,7 @@ import {
 } from "../library/auth.js";
 import { updateUserCredits } from "../components/header.js";
 import { config } from "../services/config.js"; // Import the config object
-
-const API_BASE = "https://v2.api.noroff.dev";
+import { API_BASE_URL } from "./baseApi.js"; // Add this import
 
 /**
  * Bidding Service - Handles all bidding operations
@@ -33,7 +32,7 @@ export class BiddingService {
 
       const authHeader = getAuthHeader();
       const response = await fetch(
-        `${API_BASE}/auction/profiles/${currentUser.name}`,
+        `${API_BASE_URL}/auction/profiles/${currentUser.name}`, // Use API_BASE_URL instead of API_BASE
         {
           headers: {
             "Content-Type": "application/json",
@@ -121,7 +120,7 @@ export class BiddingService {
       // Place the bid
       const authHeader = getAuthHeader();
       const response = await fetch(
-        `${API_BASE}/auction/listings/${listingId}/bids`,
+        `${API_BASE_URL}/auction/listings/${listingId}/bids`, // Use API_BASE_URL instead of API_BASE
         {
           method: "POST",
           headers: {
@@ -277,7 +276,7 @@ export class BiddingService {
     try {
       const authHeader = getAuthHeader();
       const response = await fetch(
-        `${API_BASE}/auction/profiles/${sellerName}/credits`,
+        `${API_BASE_URL}/auction/profiles/${sellerName}/credits`, // Use API_BASE_URL instead of API_BASE
         {
           method: "PATCH",
           headers: {
@@ -325,7 +324,7 @@ export class BiddingService {
     try {
       const authHeader = getAuthHeader();
       const response = await fetch(
-        `${API_BASE}/auction/profiles/${userName}/credits`,
+        `${API_BASE_URL}/auction/profiles/${userName}/credits`, // Use API_BASE_URL instead of API_BASE
         {
           method: "PATCH",
           headers: {

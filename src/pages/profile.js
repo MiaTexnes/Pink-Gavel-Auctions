@@ -5,9 +5,9 @@ import {
 } from "../library/auth.js";
 import { createListingCard } from "./listings.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
-const API_BASE = "https://v2.api.noroff.dev";
 const DEFAULT_AVATAR = "https://placehold.co/150x150?text=Avatar";
 const LISTING_DISPLAY_LIMIT = 4;
 const MESSAGE_DISPLAY_DURATION = 4000;
@@ -626,7 +626,7 @@ class APIService {
 
   static async fetchProfile(name) {
     const response = await fetch(
-      `${API_BASE}/auction/profiles/${name}?_listings=true&_wins=true&_seller=true&_bids=true`,
+      `${API_BASE_URL}/auction/profiles/${name}?_listings=true&_wins=true&_seller=true&_bids=true`, // Use API_BASE_URL instead of API_BASE
       { headers: this.getHeaders() }
     );
 
@@ -653,7 +653,8 @@ class APIService {
     if (avatar) body.avatar = { url: avatar, alt: "User avatar" };
     if (bio) body.bio = bio;
 
-    const response = await fetch(`${API_BASE}/auction/profiles/${name}`, {
+    const response = await fetch(`${API_BASE_URL}/auction/profiles/${name}`, {
+      // Use API_BASE_URL instead of API_BASE
       method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(body),
@@ -671,7 +672,8 @@ class APIService {
   }
 
   static async createListing({ title, description, endsAt, media }) {
-    const response = await fetch(`${API_BASE}/auction/listings`, {
+    const response = await fetch(`${API_BASE_URL}/auction/listings`, {
+      // Use API_BASE_URL instead of API_BASE
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify({ title, description, endsAt, media }),

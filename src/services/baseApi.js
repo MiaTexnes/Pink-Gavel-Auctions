@@ -1,5 +1,7 @@
+import { config } from "./config.js";
+
 // API Configuration
-export const API_BASE_URL = "https://v2.api.noroff.dev";
+export const API_BASE_URL = config.API_BASE_URL;
 
 // API Endpoints
 export const AUCTION_ENDPOINTS = {

@@ -1,4 +1,5 @@
 import { config } from "../services/config.js"; // Import config for API key
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Helper function to validate URL format
 function isValidUrl(string) {
@@ -86,7 +87,8 @@ export async function createListing({
   };
 
   try {
-    const res = await fetch("https://v2.api.noroff.dev/auction/listings", {
+    const res = await fetch(`${API_BASE_URL}/auction/listings`, {
+      // Use API_BASE_URL instead of hardcoded URL
       method: "POST",
       headers: {
         "Content-Type": "application/json",

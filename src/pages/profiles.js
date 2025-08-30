@@ -1,8 +1,8 @@
 import { isAuthenticated, getAuthHeader } from "../library/auth.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
-const API_BASE = "https://v2.api.noroff.dev";
 const DEFAULT_AVATAR = "https://placehold.co/100x100?text=Avatar";
 const PROFILES_PER_PAGE = 12;
 const SORT_CRITERIA = {
@@ -347,7 +347,7 @@ class APIService {
       const headers = this.getHeaders();
 
       const response = await fetch(
-        `${API_BASE}/auction/profiles?_sort=created&_order=desc&_limit=100&_listings=true&_wins=true`,
+        `${API_BASE_URL}/auction/profiles?_sort=created&_order=desc&_limit=100&_listings=true&_wins=true`, // Use API_BASE_URL instead of API_BASE
         { headers }
       );
 

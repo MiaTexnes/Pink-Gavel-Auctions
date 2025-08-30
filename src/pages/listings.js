@@ -2,10 +2,10 @@ import { isAuthenticated, getAuthHeader } from "../library/auth.js";
 import { createListing } from "../library/newListing.js";
 import { searchAndSortComponent } from "../components/searchAndSort.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
 const CONSTANTS = {
-  API_BASE: "https://v2.api.noroff.dev",
   DEFAULT_SELLER_AVATAR: "https://placehold.co/40x40?text=S",
   DIMENSIONS: {
     CARD_HEIGHT: "420px",
@@ -479,7 +479,8 @@ class UIManager {
 // API Service - Enhanced error handling
 class APIService {
   constructor() {
-    this.baseURL = CONSTANTS.API_BASE;
+    // this.baseURL = CONSTANTS.API_BASE; // Remove this line
+    this.baseURL = API_BASE_URL; // Use API_BASE_URL instead
   }
 
   async fetchListings() {

@@ -1,3 +1,4 @@
+import "./css/input.css";
 import { initDarkMode, toggleDarkMode } from "./components/darkLight.js";
 import { initializeHeader } from "./components/header.js";
 import { isAuthenticated, logoutUser } from "./library/auth.js";

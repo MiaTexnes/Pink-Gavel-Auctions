@@ -1,9 +1,9 @@
 import { isAuthenticated, getAuthHeader } from "../library/auth.js";
 import { createListingCard } from "./listings.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
-const API_BASE = "https://v2.api.noroff.dev";
 const DEFAULT_AVATAR = "https://placehold.co/150x150?text=Avatar";
 const ITEMS_PER_PAGE = 4;
 
@@ -128,11 +128,7 @@ class UIManager {
     container.innerHTML = `
       <div class="error-message ${bgColor} p-4 rounded-lg text-center max-w-md mx-auto mt-8">
         <p>${message}</p>
-        ${
-          type === "warning"
-            ? this.getBackToHomeButton()
-            : ""
-        }
+        ${type === "warning" ? this.getBackToHomeButton() : ""}
       </div>
     `;
   }
@@ -191,8 +187,8 @@ class UIManager {
   generateProfileHeader(profile) {
     return `
       <div class="flex flex-col items-center mb-6">
-        <img src="${profile.avatar?.url || DEFAULT_AVATAR}" 
-             alt="Avatar" 
+        <img src="${profile.avatar?.url || DEFAULT_AVATAR}"
+             alt="Avatar"
              class="w-32 h-32 rounded-full mb-4 object-cover border-4 border-pink-500">
         <h2 class="text-3xl font-bold mb-2">${profile.name}</h2>
         <p class="text-gray-600 dark:text-gray-300">${profile.email || "Email not available"}</p>
@@ -408,7 +404,7 @@ class APIService {
     try {
       const headers = this.getHeaders();
       const response = await fetch(
-        `${API_BASE}/auction/profiles/${name}?_listings=true&_wins=true`,
+        `${API_BASE_URL}/auction/profiles/${name}?_listings=true&_wins=true`, // Use API_BASE_URL instead of API_BASE
         { headers }
       );
 
@@ -469,7 +465,9 @@ class SellerProfileController {
         this.state.setProfile(profile);
         this.ui.renderProfile(profile);
       } else {
-        this.ui.showError("Failed to load seller profile. Please try again later.");
+        this.ui.showError(
+          "Failed to load seller profile. Please try again later."
+        );
       }
     } catch (error) {
       this.ui.showError(error.message || "An unexpected error occurred.");

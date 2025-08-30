@@ -1,9 +1,9 @@
 import { isAuthenticated } from "../library/auth.js";
 import { createListingCard } from "./listings.js";
 import { config } from "../services/config.js";
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 // Constants
-const API_BASE = "https://v2.api.noroff.dev";
 const DEFAULT_LISTINGS_LIMIT = 20;
 const CAROUSEL_UPDATE_DELAY = 100;
 const DEFAULT_IMAGE = "assets/images/logo.png";
@@ -53,7 +53,7 @@ const ResponsiveUtils = {
 const APIService = {
   async fetchLatestListings(limit = DEFAULT_LISTINGS_LIMIT) {
     const response = await fetch(
-      `${API_BASE}/auction/listings?_seller=true&_bids=true&sort=created&sortOrder=desc&limit=${limit}`,
+      `${API_BASE_URL}/auction/listings?_seller=true&_bids=true&sort=created&sortOrder=desc&limit=${limit}`, // Use API_BASE_URL instead of API_BASE
       {
         headers: {
           "Content-Type": "application/json",

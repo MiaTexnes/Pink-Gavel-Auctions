@@ -3,6 +3,7 @@
  * Handles search functionality and sorting for listings
  */
 import { config } from "../services/config.js"; // Import the config object
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 export class SearchAndSortComponent {
   constructor() {
@@ -429,7 +430,6 @@ export class SearchAndSortComponent {
    * Search via API
    */
   async searchAPI(query) {
-    const API_BASE = "https://v2.api.noroff.dev";
     const cacheKey = `search_${query.toLowerCase()}`;
     const cached = this.cache.get(cacheKey);
 
@@ -453,7 +453,7 @@ export class SearchAndSortComponent {
       }
 
       const response = await fetch(
-        `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
+        `${API_BASE_URL}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`, // Use API_BASE_URL instead of API_BASE
         { headers }
       );
 

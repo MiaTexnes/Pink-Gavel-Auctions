@@ -1,6 +1,6 @@
 // carousel.js - Carousel component for displaying listings
 import { config } from "../services/config.js"; // Import the config object
-
+import { API_BASE_URL } from "../services/baseApi.js"; // Add this import
 
 export function createCarouselCard(listing) {
   const endDate = new Date(listing.endsAt);
@@ -13,7 +13,7 @@ export function createCarouselCard(listing) {
   } else {
     const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor(
-      (timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      (timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
     timeLeftString = `Ends: ${days}d ${hours}h ${minutes}m`;
@@ -96,7 +96,7 @@ export function renderCarousel(listings, carouselContainer) {
 export function setupCarouselScrollButtons(
   scrollLeftId = "scroll-left",
   scrollRightId = "scroll-right",
-  carouselSelector = "#listings-carousel .flex",
+  carouselSelector = "#listings-carousel .flex"
 ) {
   const scrollLeftBtn = document.getElementById(scrollLeftId);
   const scrollRightBtn = document.getElementById(scrollRightId);
@@ -120,16 +120,15 @@ export function setupCarouselScrollButtons(
 
 // Fetch listings for carousel
 export async function fetchCarouselListings(limit = 20) {
-  const API_BASE = "https://v2.api.noroff.dev";
 
   const headers = {
     "Content-Type": "application/json",
-    "X-Noroff-API-Key": config.X_NOROFF_API_KEY
+    "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
   };
 
   const response = await fetch(
-    `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=${limit}&sort=created&sortOrder=desc`,
-    { headers },
+    `${API_BASE_URL}/auction/listings?_seller=true&_bids=true&limit=${limit}&sort=created&sortOrder=desc`, // Use API_BASE_URL instead of API_BASE
+    { headers }
   );
 
   if (!response.ok) {
