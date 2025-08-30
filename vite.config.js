@@ -2,7 +2,10 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 import { fileURLToPath, URL } from "node:url";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
 export default defineConfig({
+  base: "./", // Important for deployment
   server: {
     port: 3000,
     open: true,
@@ -13,42 +16,15 @@ export default defineConfig({
     minify: true,
     rollupOptions: {
       input: {
-        main: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "index.html"
-        ),
-        listings: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "listings.html"
-        ),
-        contact: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "contact.html"
-        ),
-        item: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "item.html"
-        ),
-        login: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "login.html"
-        ),
-        profile: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "profile.html"
-        ),
-        register: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "register.html"
-        ),
-        sellerProfile: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "sellerProfile.html"
-        ),
-        users: resolve(
-          fileURLToPath(new URL(".", import.meta.url)),
-          "profiles.html"
-        ),
+        main: resolve(__dirname, "index.html"),
+        listings: resolve(__dirname, "listings.html"),
+        contact: resolve(__dirname, "contact.html"),
+        item: resolve(__dirname, "item.html"),
+        login: resolve(__dirname, "login.html"),
+        profile: resolve(__dirname, "profile.html"),
+        register: resolve(__dirname, "register.html"),
+        sellerProfile: resolve(__dirname, "sellerProfile.html"),
+        users: resolve(__dirname, "profiles.html"),
       },
     },
   },
@@ -58,5 +34,11 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+  },
+  // Ensure environment variables are available
+  define: {
+    "import.meta.env.VITE_API_KEY": JSON.stringify(
+      process.env.VITE_API_KEY || ""
+    ),
   },
 });
