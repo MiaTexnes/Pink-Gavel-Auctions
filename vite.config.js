@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from "node:url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
-  base: "./", // Important for deployment
+  base: "./",
   server: {
     port: 3000,
     open: true,
@@ -34,11 +34,5 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-  },
-  // Ensure environment variables are available
-  define: {
-    "import.meta.env.VITE_API_KEY": JSON.stringify(
-      process.env.VITE_API_KEY || ""
-    ),
   },
 });

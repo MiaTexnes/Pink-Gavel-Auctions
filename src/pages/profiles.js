@@ -331,7 +331,7 @@ class APIService {
 
     const headers = {
       "Content-Type": "application/json",
-      "X-Noroff-API-Key": config.apiKey, // Fixed: Use config.apiKey to match listings.js
+      "X-Noroff-API-Key": config.X_NOROFF_API_KEY, // Fixed: Use config.X_NOROFF_API_KEY to match listings.js
     };
 
     if (isAuthenticated()) {

@@ -445,7 +445,7 @@ class APIService {
   static async fetchListing(id) {
     const headers = {
       "Content-Type": "application/json",
-      "X-Noroff-API-Key": config.apiKey,
+      "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
     };
 
     if (isAuthenticated()) {
@@ -485,7 +485,7 @@ class APIService {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": config.apiKey,
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
         Authorization: authHeader.Authorization,
       },
     });
@@ -508,7 +508,7 @@ class APIService {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": config.apiKey,
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
         Authorization: authHeader.Authorization,
       },
       body: JSON.stringify(updatedData),

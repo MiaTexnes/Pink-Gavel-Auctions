@@ -90,7 +90,7 @@ export async function createListing({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": config.apiKey, // Use API key from config
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY, // Use API key from config
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(requestBody),

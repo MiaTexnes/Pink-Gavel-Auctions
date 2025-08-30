@@ -57,7 +57,7 @@ const APIService = {
       {
         headers: {
           "Content-Type": "application/json",
-          "X-Noroff-API-Key": config.apiKey,
+          "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
         },
       }
     );
