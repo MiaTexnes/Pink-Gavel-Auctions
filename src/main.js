@@ -12,6 +12,7 @@ initDarkMode();
 // Make toggleDarkMode globally available for event listeners
 window.toggleDarkMode = toggleDarkMode;
 
+
 // --- Inactivity auto-logout logic ---
 const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes in ms
 let inactivityTimer = null;
