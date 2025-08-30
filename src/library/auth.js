@@ -9,7 +9,7 @@ export async function loginUser(userData) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": config.apiKey, // Fixed: use config.apiKey
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY, // Fixed: use config.apiKey
       },
       body: JSON.stringify({
         email: userData.email,
@@ -70,7 +70,7 @@ export async function registerUser(userData) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": config.apiKey, // Fixed: use config.apiKey
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY, // Fixed: use config.apiKey
       },
       body: JSON.stringify({
         name: userData.name,
@@ -141,7 +141,7 @@ export async function getUserProfile(name) {
       {
         headers: {
           "Content-Type": "application/json",
-          "X-Noroff-API-Key": config.apiKey, // Fixed: use config.apiKey
+          "X-Noroff-API-Key": config.X_NOROFF_API_KEY, // Fixed: use config.apiKey
           Authorization: authHeader.Authorization,
         },
       }
