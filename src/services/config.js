@@ -8,6 +8,7 @@ export const config = {
   mode: import.meta.env.MODE,
 };
 
+
 // Production error logging
 if (!apiKey) {
   console.error("❌ CRITICAL: VITE_X_NOROFF_API_KEY is missing!");
