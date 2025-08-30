@@ -145,3 +145,14 @@ function initializePage() {
 
 // Run initialization when DOM is loaded
 document.addEventListener("DOMContentLoaded", initializePage);
+
+// Add this temporarily to debug
+console.log("=== DEBUG INFO ===");
+console.log("Mode:", import.meta.env.MODE);
+console.log("API Key exists:", !!import.meta.env.VITE_X_NOROFF_API_KEY);
+console.log("API Key length:", import.meta.env.VITE_X_NOROFF_API_KEY?.length);
+console.log(
+  "All VITE_ vars:",
+  Object.keys(import.meta.env).filter((key) => key.startsWith("VITE_"))
+);
+console.log("==================");
