@@ -65,7 +65,7 @@ function renderHeader() {
             <div class="flex items-center space-x-3">
               <a href="/index.html" class="flex items-center space-x-2">
                 <img src="/assets/images/logo.png" alt="Pink Gavel Auctions" class="h-8 w-8">
-                <span class="text-xl font-bold text-gray-900 dark:text-white">Pink Gavel Auctions</span>
+                <span class="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Pink Gavel Auctions</span>
               </a>
             </div>
 
