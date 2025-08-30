@@ -29,8 +29,6 @@ async function updateCreditsDisplay() {
           });
         }
       } catch (error) {
-        console.error("Error updating credits:", error);
-
         // Hide all #user-credits elements on error
         creditsElements.forEach((element) => {
           element.classList.add("hidden");
@@ -220,29 +218,20 @@ function renderHeader() {
 }
 
 function setupEventListeners() {
-  console.log("Setting up header event listeners...");
-
   // Mobile menu toggle
   const mobileMenuBtn = document.getElementById("mobile-menu-btn");
   const mobileMenu = document.getElementById("mobile-menu");
 
   if (mobileMenuBtn && mobileMenu) {
-    console.log("Setting up mobile menu toggle");
     mobileMenuBtn.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("Mobile menu button clicked");
       mobileMenu.classList.toggle("hidden");
 
       // Update credits display when the mobile menu is opened
       if (!mobileMenu.classList.contains("hidden")) {
         await updateCreditsDisplay();
       }
-    });
-  } else {
-    console.error("Mobile menu elements not found:", {
-      mobileMenuBtn,
-      mobileMenu,
     });
   }
 
@@ -299,18 +288,15 @@ function setupEventListeners() {
   }
 
   // Initialize search and sort component
-  console.log("Initializing search and sort component...");
   try {
     searchAndSortComponent.init();
-    console.log("✅ Search and sort component initialized successfully");
   } catch (error) {
-    console.error("❌ Failed to initialize search and sort component:", error);
+    // Component initialization failed, but don't log to console
   }
 }
 
 // Initialize header
 export function initializeHeader() {
-  console.log("Initializing header...");
   const headerElement = document.querySelector("header");
   if (headerElement) {
     headerElement.innerHTML = renderHeader();
@@ -322,21 +308,17 @@ export function initializeHeader() {
     if (isAuthenticated()) {
       updateCreditsDisplay();
     }
-  } else {
-    console.error("❌ Header element not found in DOM");
   }
 }
 
 // Auto-initialize when the script loads
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM Content Loaded - initializing header");
   initializeHeader();
 });
 
 // Listen for storage changes to update header when login state changes
 window.addEventListener("storage", (e) => {
   if (e.key === "accessToken" || e.key === "user") {
-    console.log("Auth state changed, reinitializing header");
     initializeHeader();
   }
 });

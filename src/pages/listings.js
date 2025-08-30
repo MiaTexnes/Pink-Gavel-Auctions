@@ -1,710 +1,955 @@
 import { isAuthenticated, getAuthHeader } from "../library/auth.js";
 import { createListing } from "../library/newListing.js";
 import { searchAndSortComponent } from "../components/searchAndSort.js";
+import { config } from "../services/config.js";
 
-const API_BASE = "https://v2.api.noroff.dev";
-const listingsContainer = document.getElementById("listings-container");
-const messageContainer = document.getElementById("message-container");
-const messageText = document.getElementById("message-text");
-const loadingSpinner = document.getElementById("loading-spinner");
+// Constants
+const CONSTANTS = {
+  API_BASE: "https://v2.api.noroff.dev",
+  DEFAULT_SELLER_AVATAR: "https://placehold.co/40x40?text=S",
+  DIMENSIONS: {
+    CARD_HEIGHT: "420px",
+    IMAGE_HEIGHT: "192px",
+    CONTENT_HEIGHT: "228px",
+  },
+  MAX_TAGS: 10,
+  DEFAULT_MEDIA_INPUTS: 2,
+};
 
-// Global variables for search functionality
-let listings = [];
-let filteredListings = [];
+// Utility Functions
+const Utils = {
+  processTags(tagsString) {
+    if (!tagsString || typeof tagsString !== "string") {
+      return [];
+    }
 
-// Global variable to store selected media URLs
-let selectedMediaUrls = [];
+    return tagsString
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0)
+      .slice(0, CONSTANTS.MAX_TAGS);
+  },
 
-function showMessage(msg, type = "info") {
-  if (!messageText || !messageContainer || !listingsContainer) return;
-  messageText.textContent = msg;
-  messageContainer.className = `mt-8 text-center ${
-    type === "error" ? "text-red-600" : "text-gray-600 dark:text-gray-300"
-  }`;
-  messageContainer.classList.remove("hidden");
-  listingsContainer.innerHTML = "";
-}
+  clearSearchResults() {
+    const headerSearch = document.getElementById("header-search");
+    const mobileSearch = document.getElementById("mobile-search");
 
-function showLoading() {
-  if (!loadingSpinner || !messageContainer || !listingsContainer) return;
-  loadingSpinner.classList.remove("hidden");
-  messageContainer.classList.add("hidden");
-  listingsContainer.innerHTML = "";
-}
+    if (headerSearch) headerSearch.value = "";
+    if (mobileSearch) mobileSearch.value = "";
 
-function hideLoading() {
-  if (!loadingSpinner) return;
-  loadingSpinner.classList.add("hidden");
-}
+    const url = new URL(window.location);
+    url.searchParams.delete("search");
+    window.history.replaceState({}, "", url);
+  },
 
-function showError(message) {
-  console.error(message);
-  showMessage(message, "error");
-}
+  formatTimeRemaining(endsAt) {
+    const endDate = new Date(endsAt);
+    const now = new Date();
+    const timeLeftMs = endDate.getTime() - now.getTime();
 
-export function createListingCard(listing) {
-  const endDate = new Date(listing.endsAt);
-  const createdDate = new Date(listing.created); // Get the created date
-  const now = new Date();
-  const timeLeftMs = endDate.getTime() - now.getTime();
+    if (timeLeftMs < 0) {
+      return {
+        text: "Ended",
+        class: "underline text-red-700 dark:text-red-400 font-semibold",
+      };
+    }
 
-  let timeLeftString;
-  let timeLeftClass = ""; // Add a class for styling
-  if (timeLeftMs < 0) {
-    timeLeftString = "Ended";
-    timeLeftClass = "underline text-red-700 dark:text-red-400 font-semibold"; // Add underline and red color
-  } else {
     const days = Math.floor(timeLeftMs / (1000 * 60 * 60 * 24));
     const hours = Math.floor(
       (timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
     );
     const minutes = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
-    timeLeftString = `Ends: ${days}d ${hours}h ${minutes}m`;
-    timeLeftClass = "text-green-500 dark:text-green-400"; // Green color for active listings
+
+    return {
+      text: `Ends: ${days}d ${hours}h ${minutes}m`,
+      class: "text-green-500 dark:text-green-400",
+    };
+  },
+
+  setMinimumDateTime(element) {
+    if (!element) return;
+
+    const now = new Date();
+    const localDateTime = new Date(
+      now.getTime() - now.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 16);
+
+    element.min = localDateTime;
+  },
+};
+
+// DOM Elements Manager - Simplified and more focused
+class DOMElementManager {
+  constructor() {
+    this.cache = new Map();
+    this.initializeElements();
   }
 
-  const imageUrl =
-    listing.media && listing.media.length > 0 && listing.media[0].url
-      ? listing.media[0].url
-      : null;
-  const sellerAvatar =
-    listing.seller && listing.seller.avatar && listing.seller.avatar.url
-      ? listing.seller.avatar.url
-      : "https://placehold.co/40x40?text=S";
-  const sellerName =
-    listing.seller && listing.seller.name ? listing.seller.name : "Unknown";
+  initializeElements() {
+    // Core elements
+    this.setElements({
+      listingsContainer: "listings-container",
+      messageContainer: "message-container",
+      messageText: "message-text",
+      loadingSpinner: "loading-spinner",
+    });
 
-  const card = document.createElement("a");
-  card.href = `/item.html?id=${listing.id}`;
-  card.className =
-    "border border-gray-300 block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl hover:shadow-black transition-shadow duration-200 overflow-hidden w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1";
+    // Search elements
+    this.setElements({
+      headerSearch: "header-search",
+      mobileSearch: "mobile-search",
+    });
 
-  card.style.height = "420px";
-  card.style.minHeight = "420px";
-  card.style.maxHeight = "420px";
+    // Modal elements
+    this.setModalElements();
+    this.setFormElements();
+  }
 
-  card.innerHTML = `
-    ${
-      imageUrl
-        ? `<div class="w-full flex-shrink-0 bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center" style="height: 192px; min-height: 192px; max-height: 192px;">
-            <img src="${imageUrl}" alt="${listing.title}" class="w-full h-full object-contain listing-image transition-transform duration-300 hover:scale-105" style="max-width: 100%; max-height: 100%;">
-           </div>`
-        : `<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: 192px; min-height: 192px; max-height: 192px;">
-            No image on this listing
-           </div>`
+  setElements(elements) {
+    Object.entries(elements).forEach(([key, id]) => {
+      this.cache.set(key, document.getElementById(id));
+    });
+  }
+
+  setModalElements() {
+    const modalElements = {
+      addListingModal: "addListingModal",
+      addListingForm: "addListingForm",
+      closeAddListingModal: "closeAddListingModal",
+      cancelAddListingBtn: "cancelAddListingBtn",
+      addListingBtn: "addListingBtn",
+      addMediaModal: "addMediaModal",
+      addMediaForm: "addMediaForm",
+      mediaUrlInputs: "mediaUrlInputs",
+      openMediaModalBtn: "openMediaModalBtn",
+      addMoreUrlBtn: "addMoreUrlBtn",
+      backToListingBtn: "backToListingBtn",
+      mediaCount: "mediaCount",
+    };
+
+    this.setElements(modalElements);
+  }
+
+  setFormElements() {
+    const formElements = {
+      listingTitle: "listingTitle",
+      listingDesc: "listingDesc",
+      listingEndDate: "listingEndDate",
+      listingTags: "listingTags",
+    };
+
+    this.setElements(formElements);
+  }
+
+  get(elementKey) {
+    return this.cache.get(elementKey);
+  }
+
+  getAll(elementKeys) {
+    return elementKeys.reduce((acc, key) => {
+      acc[key] = this.get(key);
+      return acc;
+    }, {});
+  }
+}
+
+// State Manager - Enhanced with better encapsulation
+class StateManager {
+  constructor() {
+    this.state = {
+      listings: [],
+      filteredListings: [],
+      selectedMediaUrls: [],
+      isLoading: false,
+      currentSearch: null,
+    };
+  }
+
+  // Listings
+  setListings(listings) {
+    this.state.listings = [...listings];
+    return this;
+  }
+
+  getListings() {
+    return [...this.state.listings];
+  }
+
+  // Filtered listings
+  setFilteredListings(listings) {
+    this.state.filteredListings = [...listings];
+    return this;
+  }
+
+  getFilteredListings() {
+    return [...this.state.filteredListings];
+  }
+
+  // Media URLs
+  addMediaUrl(url) {
+    if (url && !this.state.selectedMediaUrls.includes(url)) {
+      this.state.selectedMediaUrls.push(url);
     }
-    <div class="p-4 flex-1 flex flex-col min-h-0" style="height: 228px; min-height: 228px; max-height: 228px;">
-      <h2 class="text-lg font-semibold mb-2 line-clamp-2 text-gray-900 dark:text-white transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400" style="height: 48px; min-height: 48px; max-height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${listing.title}</h2>
-      <p class="text-gray-700 dark:text-gray-300 text-sm mb-3 flex-1 overflow-hidden transition-colors duration-200" style="height: 64px; min-height: 64px; max-height: 64px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${
-        listing.description || "No description provided."
-      }</p>
-      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
-        <span class="text-gray-600 dark:text-gray-400">Created: ${createdDate.toLocaleDateString()} By ${sellerName}</span>
-        <img src="${sellerAvatar}" alt="${sellerName}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
-      </div>
-      <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
-        <span class="font-medium ${timeLeftClass} transition-colors duration-200 truncate" style="max-width: 60%;">${timeLeftString}</span>
-        <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105 flex-shrink-0">Bids: ${listing._count?.bids || 0}</span>
-      </div>
-    </div>
-  `;
+    return this;
+  }
 
-  // Handle image error with JavaScript
-  if (imageUrl) {
+  setMediaUrls(urls) {
+    this.state.selectedMediaUrls = [...urls];
+    return this;
+  }
+
+  getMediaUrls() {
+    return [...this.state.selectedMediaUrls];
+  }
+
+  clearMediaUrls() {
+    this.state.selectedMediaUrls = [];
+    return this;
+  }
+
+  // Loading state
+  setLoading(isLoading) {
+    this.state.isLoading = isLoading;
+    return this;
+  }
+
+  isLoading() {
+    return this.state.isLoading;
+  }
+
+  // Search state
+  setCurrentSearch(searchQuery) {
+    this.state.currentSearch = searchQuery;
+    return this;
+  }
+
+  getCurrentSearch() {
+    return this.state.currentSearch;
+  }
+}
+
+// Card Builder - Separated concern for building listing cards
+class ListingCardBuilder {
+  constructor() {
+    this.cardClasses =
+      "border border-gray-300 block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl hover:shadow-black transition-shadow duration-200 overflow-hidden w-full flex flex-col cursor-pointer transform hover:scale-[1.02] hover:-translate-y-1";
+  }
+
+  build(listing) {
+    const timeInfo = Utils.formatTimeRemaining(listing.endsAt);
+    const createdDate = new Date(listing.created);
+    const imageUrl = this.extractImageUrl(listing.media);
+    const sellerInfo = this.extractSellerInfo(listing.seller);
+
+    const card = this.createCardElement(listing);
+    card.innerHTML = this.generateCardHTML({
+      imageUrl,
+      title: listing.title,
+      description: listing.description,
+      createdDate,
+      sellerInfo,
+      timeInfo,
+      bidCount: listing._count?.bids || 0,
+    });
+
+    this.handleImageError(card, imageUrl);
+    return card;
+  }
+
+  createCardElement(listing) {
+    const card = document.createElement("a");
+    card.href = `/item.html?id=${listing.id}`;
+    card.className = this.cardClasses;
+    card.style.cssText = `height: ${CONSTANTS.DIMENSIONS.CARD_HEIGHT}; min-height: ${CONSTANTS.DIMENSIONS.CARD_HEIGHT}; max-height: ${CONSTANTS.DIMENSIONS.CARD_HEIGHT};`;
+    return card;
+  }
+
+  extractImageUrl(media) {
+    return media && media.length > 0 && media[0].url ? media[0].url : null;
+  }
+
+  extractSellerInfo(seller) {
+    return {
+      name: seller?.name || "Unknown",
+      avatar: seller?.avatar?.url || CONSTANTS.DEFAULT_SELLER_AVATAR,
+    };
+  }
+
+  generateCardHTML({
+    imageUrl,
+    title,
+    description,
+    createdDate,
+    sellerInfo,
+    timeInfo,
+    bidCount,
+  }) {
+    return `
+      ${this.generateImageHTML(imageUrl, title)}
+      <div class="p-4 flex-1 flex flex-col min-h-0" style="height: ${CONSTANTS.DIMENSIONS.CONTENT_HEIGHT}; min-height: ${CONSTANTS.DIMENSIONS.CONTENT_HEIGHT}; max-height: ${CONSTANTS.DIMENSIONS.CONTENT_HEIGHT};">
+        ${this.generateTitleHTML(title)}
+        ${this.generateDescriptionHTML(description)}
+        ${this.generateSellerInfoHTML(createdDate, sellerInfo)}
+        ${this.generateTimeAndBidsHTML(timeInfo, bidCount)}
+      </div>
+    `;
+  }
+
+  generateImageHTML(imageUrl, title) {
+    if (imageUrl) {
+      return `<div class="w-full flex-shrink-0 bg-gray-100 dark:bg-gray-700 overflow-hidden flex items-center justify-center" style="height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; min-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; max-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT};">
+        <img src="${imageUrl}" alt="${title}" class="w-full h-full object-contain listing-image transition-transform duration-300 hover:scale-105" style="max-width: 100%; max-height: 100%;">
+      </div>`;
+    }
+
+    return `<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; min-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; max-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT};">
+      No image on this listing
+    </div>`;
+  }
+
+  generateTitleHTML(title) {
+    return `<h2 class="text-lg font-semibold mb-2 line-clamp-2 text-gray-900 dark:text-white transition-colors duration-200 hover:text-pink-600 dark:hover:text-pink-400" style="height: 48px; min-height: 48px; max-height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${title}</h2>`;
+  }
+
+  generateDescriptionHTML(description) {
+    return `<p class="text-gray-700 dark:text-gray-300 text-sm mb-3 flex-1 overflow-hidden transition-colors duration-200" style="height: 64px; min-height: 64px; max-height: 64px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${description || "No description provided."}</p>`;
+  }
+
+  generateSellerInfoHTML(createdDate, sellerInfo) {
+    return `<div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
+      <span class="text-gray-600 dark:text-gray-400">Created: ${createdDate.toLocaleDateString()} By ${sellerInfo.name}</span>
+      <img src="${sellerInfo.avatar}" alt="${sellerInfo.name}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-pink-400 dark:hover:border-pink-500 hover:shadow-md flex-shrink-0" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px;">
+    </div>`;
+  }
+
+  generateTimeAndBidsHTML(timeInfo, bidCount) {
+    return `<div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3 flex-shrink-0" style="height: 24px; min-height: 24px; max-height: 24px;">
+      <span class="font-medium ${timeInfo.class} transition-colors duration-200 truncate" style="max-width: 60%;">${timeInfo.text}</span>
+      <span class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 hover:bg-pink-100 dark:hover:bg-pink-900 hover:scale-105 flex-shrink-0">Bids: ${bidCount}</span>
+    </div>`;
+  }
+
+  handleImageError(card, imageUrl) {
+    if (!imageUrl) return;
+
     const img = card.querySelector(".listing-image");
     if (img) {
       img.addEventListener("error", function () {
-        this.parentElement.outerHTML =
-          '<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: 192px; min-height: 192px; max-height: 192px;">No image on this listing</div>';
+        this.parentElement.outerHTML = `<div class="w-full flex items-center justify-center bg-gradient-to-br from-pink-400 to-purple-500 text-white text-center font-semibold text-lg italic flex-shrink-0 transition-all duration-300 hover:from-pink-500 hover:to-purple-600" style="height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; min-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT}; max-height: ${CONSTANTS.DIMENSIONS.IMAGE_HEIGHT};">No image on this listing</div>`;
       });
     }
   }
-
-  return card;
 }
 
-// Fetch all listings from API
-async function fetchlistings() {
-  if (!listingsContainer) return;
-  showLoading();
+// UI Manager - Refactored for better separation of concerns
+class UIManager {
+  constructor(elementManager, cardBuilder) {
+    this.elements = elementManager;
+    this.cardBuilder = cardBuilder;
+  }
 
-  try {
-    const token = isAuthenticated() ? getAuthHeader().Authorization : "";
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
-    };
-    if (token) {
-      headers["Authorization"] = token;
+  showMessage(message, type = "info") {
+    const messageText = this.elements.get("messageText");
+    const messageContainer = this.elements.get("messageContainer");
+    const listingsContainer = this.elements.get("listingsContainer");
+
+    if (!messageText || !messageContainer || !listingsContainer) return;
+
+    messageText.textContent = message;
+    messageContainer.className = `mt-8 text-center ${
+      type === "error" ? "text-red-600" : "text-gray-600 dark:text-gray-300"
+    }`;
+
+    messageContainer.classList.remove("hidden");
+    listingsContainer.innerHTML = "";
+  }
+
+  showLoading() {
+    const { loadingSpinner, messageContainer, listingsContainer } =
+      this.elements.getAll([
+        "loadingSpinner",
+        "messageContainer",
+        "listingsContainer",
+      ]);
+
+    if (!loadingSpinner) return;
+
+    loadingSpinner.classList.remove("hidden");
+    messageContainer?.classList.add("hidden");
+    if (listingsContainer) listingsContainer.innerHTML = "";
+  }
+
+  hideLoading() {
+    const loadingSpinner = this.elements.get("loadingSpinner");
+    if (loadingSpinner) {
+      loadingSpinner.classList.add("hidden");
     }
+  }
 
-    console.log("Making API request with headers:", headers);
+  showError(message) {
+    this.showMessage(message, "error");
+  }
 
-    const response = await fetch(
-      `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
-      {
-        headers: headers,
-      }
-    );
+  displayListings(listings) {
+    const listingsContainer = this.elements.get("listingsContainer");
+    if (!listingsContainer) return;
 
-    console.log("API Response status:", response.status);
-    console.log(
-      "API Response headers:",
-      Object.fromEntries(response.headers.entries())
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Error:", errorData);
-      throw new Error(
-        errorData.errors?.[0]?.message || "Failed to fetch listings."
-      );
+    this.hideLoading();
+    const messageContainer = this.elements.get("messageContainer");
+    if (messageContainer) {
+      messageContainer.classList.add("hidden");
     }
-
-    const responseData = await response.json();
-    console.log("Full API Response:", responseData);
-
-    listings = responseData.data || []; // Now this reassignment works
 
     if (listings.length === 0) {
-      console.log("No listings returned from API");
-      showMessage("No listings found.", "info");
+      this.showMessage("No listings found.", "info");
       return;
     }
 
-    displayListings(listings);
-  } catch (error) {
-    console.error("Error fetching listings:", error);
-    showMessage(`Error: ${error.message}`, "error");
-  } finally {
-    hideLoading();
-  }
-}
+    listingsContainer.innerHTML = "";
+    const fragment = document.createDocumentFragment();
 
-// Display listings in the UI
-function displayListings(listings) {
-  if (!listingsContainer) return;
-
-  // Hide loading and messages
-  hideLoading();
-  if (messageContainer) {
-    messageContainer.classList.add("hidden");
-  }
-
-  if (listings.length === 0) {
-    showMessage("No listings found.", "info");
-    return;
-  }
-
-  // Clear container and add listings
-  listingsContainer.innerHTML = "";
-  listings.forEach((listing) => {
-    listingsContainer.appendChild(createListingCard(listing));
-  });
-}
-
-// Search results handling
-function handleSearchResults(event) {
-  const { query, results, error, sortBy } = event.detail;
-
-  console.log("Search results received on listings page:", {
-    query,
-    results: results.length,
-    error,
-    sortBy,
-  });
-
-  if (error) {
-    showError(`Search error: ${error}`);
-    return;
-  }
-
-  // Handle special case for active auctions with no results
-  if (sortBy === "active-auctions" && results.length === 0) {
-    if (query.trim() === "") {
-      showMessage("No active auctions available at the moment.", "info");
-    } else {
-      showMessage(`No active auctions found for "${query}".`, "info");
-    }
-    return;
-  }
-
-  // Handle empty results for other sorts
-  if (results.length === 0) {
-    if (query.trim() === "") {
-      showMessage("No listings available at the moment.", "info");
-    } else {
-      showMessage(`No results found for "${query}".`, "info");
-    }
-    return;
-  }
-
-  // Always display the results from the search component
-  if (query.trim() === "") {
-    // No search query - just sorting/displaying all listings
-    removeSearchIndicator();
-    displayListings(results);
-  } else {
-    // Search results with query
-    filteredListings = results;
-    displayListings(results);
-    updateSearchIndicator(query, results.length);
-  }
-}
-
-function updateSearchIndicator(query, resultCount) {
-  // Remove existing indicator first
-  removeSearchIndicator();
-
-  // Create new search indicator
-  const indicator = document.createElement("div");
-  indicator.id = "search-indicator";
-  indicator.className =
-    "mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg";
-
-  indicator.innerHTML = `
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-blue-800 dark:text-blue-200 font-medium">
-          Search results for "${query}" (${resultCount} ${resultCount === 1 ? "result" : "results"})
-        </p>
-      </div>
-      <button onclick="clearSearchResults()" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm underline">
-        Clear search
-      </button>
-    </div>
-  `;
-
-  // Insert before listings container
-  if (listingsContainer && listingsContainer.parentNode) {
-    listingsContainer.parentNode.insertBefore(indicator, listingsContainer);
-  }
-}
-
-function removeSearchIndicator() {
-  const indicator = document.getElementById("search-indicator");
-  if (indicator) {
-    indicator.remove();
-  }
-}
-
-// Make clearSearchResults globally available
-window.clearSearchResults = function () {
-  const headerSearch = document.getElementById("header-search");
-  const mobileSearch = document.getElementById("mobile-search");
-  if (headerSearch) headerSearch.value = "";
-  if (mobileSearch) mobileSearch.value = "";
-
-  removeSearchIndicator();
-  displayListings(listings);
-
-  const url = new URL(window.location);
-  url.searchParams.delete("search");
-  window.history.replaceState({}, "", url);
-};
-
-// Modal functions
-function openAddListingModal() {
-  const addListingModal = document.getElementById("addListingModal");
-  if (!addListingModal) return;
-  addListingModal.classList.remove("hidden");
-
-  // Set minimum date to current date/time
-  const now = new Date();
-  const localDateTime = new Date(
-    now.getTime() - now.getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .slice(0, 16);
-  const listingEndDate = document.getElementById("listingEndDate");
-  if (listingEndDate) {
-    listingEndDate.min = localDateTime;
-  }
-
-  // Setup media modal button
-  setupMediaModalButton();
-  // Reset selected media
-  selectedMediaUrls = [];
-  updateMediaPreview();
-}
-
-function closeAddListing() {
-  const addListingModal = document.getElementById("addListingModal");
-  if (!addListingModal) return;
-  addListingModal.classList.add("hidden");
-  const form = document.getElementById("addListingForm");
-  if (form) {
-    form.reset();
-    selectedMediaUrls = [];
-    updateMediaPreview();
-  }
-}
-
-// Media Modal functions
-function openMediaModal() {
-  const mediaModal = document.getElementById("addMediaModal");
-  const listingModal = document.getElementById("addListingModal");
-
-  console.log("Opening media modal"); // Debug log
-  console.log("Media modal found:", !!mediaModal); // Debug log
-  console.log("Listing modal found:", !!listingModal); // Debug log
-
-  if (!mediaModal || !listingModal) return;
-
-  listingModal.classList.add("hidden");
-  mediaModal.classList.remove("hidden");
-
-  // Use the simpler event setup
-  setupMediaInputsSimple();
-  populateExistingMedia();
-}
-
-function closeMediaModal() {
-  const mediaModal = document.getElementById("addMediaModal");
-  const listingModal = document.getElementById("addListingModal");
-  if (!mediaModal || !listingModal) return;
-
-  mediaModal.classList.add("hidden");
-  listingModal.classList.remove("hidden");
-  resetMediaInputs();
-}
-
-function setupMediaModalButton() {
-  const openMediaBtn = document.getElementById("openMediaModalBtn");
-  if (openMediaBtn) {
-    // Remove existing event listeners
-    const newBtn = openMediaBtn.cloneNode(true);
-    openMediaBtn.parentNode.replaceChild(newBtn, openMediaBtn);
-    newBtn.addEventListener("click", openMediaModal);
-  }
-}
-
-// Setup dynamic media inputs
-function setupMediaInputs() {
-  const addMoreBtn = document.getElementById("addMoreUrlBtn");
-  const backBtn = document.getElementById("backToListingBtn");
-  const mediaForm = document.getElementById("addMediaForm");
-
-  // Clear existing event listeners and add new ones
-  if (addMoreBtn) {
-    // Remove existing listeners by cloning
-    const newAddMoreBtn = addMoreBtn.cloneNode(true);
-    addMoreBtn.parentNode.replaceChild(newAddMoreBtn, addMoreBtn);
-
-    // Add event listener to the new button
-    newAddMoreBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      console.log("Add more media button clicked"); // Debug log
-
-      const mediaContainer = document.getElementById("mediaUrlInputs");
-      if (!mediaContainer) {
-        console.error("Media container not found");
-        return;
-      }
-
-      const currentInputs = mediaContainer.querySelectorAll("input").length;
-      console.log("Current inputs count:", currentInputs); // Debug log
-
-      const newInput = document.createElement("input");
-      newInput.type = "url";
-      newInput.name = "mediaUrl";
-      newInput.placeholder = `Image URL ${currentInputs + 1}`;
-      newInput.className =
-        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
-
-      mediaContainer.appendChild(newInput);
-      console.log("New input added"); // Debug log
+    listings.forEach((listing) => {
+      fragment.appendChild(this.cardBuilder.build(listing));
     });
-  } else {
-    console.error("Add more button not found");
+
+    listingsContainer.appendChild(fragment);
   }
 
-  if (backBtn) {
-    const newBackBtn = backBtn.cloneNode(true);
-    backBtn.parentNode.replaceChild(newBackBtn, backBtn);
-    newBackBtn.addEventListener("click", function (e) {
-      e.preventDefault();
-      closeMediaModal();
-    });
-  }
+  updateAuthUI() {
+    const addListingBtn = this.elements.get("addListingBtn");
+    if (!addListingBtn) return;
 
-  if (mediaForm) {
-    const newMediaForm = mediaForm.cloneNode(true);
-    mediaForm.parentNode.replaceChild(newMediaForm, mediaForm);
-    newMediaForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      collectAndSaveMediaUrls();
-      closeMediaModal();
-    });
-  }
-}
-
-// Alternative approach - simpler event handling
-function setupMediaInputsSimple() {
-  // Remove any existing event listeners by using onclick
-  const addMoreBtn = document.getElementById("addMoreUrlBtn");
-  const backBtn = document.getElementById("backToListingBtn");
-  const mediaForm = document.getElementById("addMediaForm");
-
-  if (addMoreBtn) {
-    addMoreBtn.onclick = function (e) {
-      e.preventDefault();
-      console.log("Add more media button clicked"); // Debug log
-
-      const mediaContainer = document.getElementById("mediaUrlInputs");
-      if (!mediaContainer) {
-        console.error("Media container not found");
-        return;
-      }
-
-      const currentInputs = mediaContainer.querySelectorAll("input").length;
-      console.log("Current inputs count:", currentInputs); // Debug log
-
-      const newInput = document.createElement("input");
-      newInput.type = "url";
-      newInput.name = "mediaUrl";
-      newInput.placeholder = `Image URL ${currentInputs + 1}`;
-      newInput.className =
-        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
-
-      mediaContainer.appendChild(newInput);
-      console.log("New input added"); // Debug log
-    };
-  } else {
-    console.error("Add more button not found");
-  }
-
-  if (backBtn) {
-    backBtn.onclick = function (e) {
-      e.preventDefault();
-      closeMediaModal();
-    };
-  }
-
-  if (mediaForm) {
-    mediaForm.onsubmit = function (e) {
-      e.preventDefault();
-      collectAndSaveMediaUrls();
-      closeMediaModal();
-    };
-  }
-}
-
-// Populate existing media URLs in the modal
-function populateExistingMedia() {
-  const mediaContainer = document.getElementById("mediaUrlInputs");
-  if (!mediaContainer) return;
-
-  // Clear existing inputs
-  mediaContainer.innerHTML = "";
-
-  // Add existing URLs or default empty inputs
-  if (selectedMediaUrls.length > 0) {
-    selectedMediaUrls.forEach((url, index) => {
-      const input = document.createElement("input");
-      input.type = "url";
-      input.name = "mediaUrl";
-      input.placeholder = `Image URL ${index + 1}`;
-      input.value = url;
-      input.className =
-        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
-      mediaContainer.appendChild(input);
-    });
-  } else {
-    // Add default two empty inputs
-    for (let i = 1; i <= 2; i++) {
-      const input = document.createElement("input");
-      input.type = "url";
-      input.name = "mediaUrl";
-      input.placeholder = `Image URL ${i}`;
-      input.className =
-        "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
-      mediaContainer.appendChild(input);
-    }
-  }
-}
-
-// Reset media inputs to default state
-function resetMediaInputs() {
-  const mediaContainer = document.getElementById("mediaUrlInputs");
-  if (mediaContainer) {
-    mediaContainer.innerHTML = `
-      <input
-        type="url"
-        name="mediaUrl"
-        placeholder="Image URL 1"
-        class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
-      />
-      <input
-        type="url"
-        name="mediaUrl"
-        placeholder="Image URL 2"
-        class="w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white"
-      />
-    `;
-  }
-}
-
-// Collect media URLs from modal and save them
-function collectAndSaveMediaUrls() {
-  const mediaInputs = document.querySelectorAll("input[name='mediaUrl']");
-  selectedMediaUrls = Array.from(mediaInputs)
-    .map((input) => input.value.trim())
-    .filter((url) => url.length > 0);
-
-  updateMediaPreview();
-}
-
-// Update the media preview in the main modal
-function updateMediaPreview() {
-  const mediaCount = document.getElementById("mediaCount");
-  if (mediaCount) {
-    if (selectedMediaUrls.length === 0) {
-      mediaCount.textContent = "No media selected";
-      mediaCount.className = "text-gray-600 dark:text-gray-400";
-    } else {
-      mediaCount.textContent = `${selectedMediaUrls.length} media item${
-        selectedMediaUrls.length > 1 ? "s" : ""
-      } selected`;
-      mediaCount.className = "text-green-600 dark:text-green-400";
-    }
-  }
-}
-
-// Function to collect media URLs from form (updated to use selectedMediaUrls)
-function collectMediaUrls() {
-  return selectedMediaUrls;
-}
-
-// Function to update UI based on authentication status
-function updateAuthUI() {
-  const addListingBtn = document.getElementById("addListingBtn");
-
-  if (addListingBtn) {
     if (isAuthenticated()) {
       addListingBtn.classList.remove("hidden");
     } else {
       addListingBtn.classList.add("hidden");
     }
   }
-}
 
-// Initialize page
-document.addEventListener("DOMContentLoaded", () => {
-  // Only run on listings page
-  if (!listingsContainer) return;
+  updateSearchIndicator(query, resultCount) {
+    this.removeSearchIndicator();
 
-  // Initialize search and sort component
-  console.log("Initializing search and sort component...");
-  searchAndSortComponent.init();
+    const indicator = document.createElement("div");
+    indicator.id = "search-indicator";
+    indicator.className =
+      "mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg";
 
-  // Update UI based on authentication status
-  updateAuthUI();
+    indicator.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-blue-800 dark:text-blue-200 font-medium">
+            Search results for "${query}" (${resultCount} ${resultCount === 1 ? "result" : "results"})
+          </p>
+        </div>
+        <button onclick="clearSearchResults()" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm underline">
+          Clear search
+        </button>
+      </div>
+    `;
 
-  // Set default active sort button to "Newest"
-  const newestButton = document.querySelector('.sort-btn[data-sort="newest"]');
-  if (newestButton) {
-    newestButton.classList.remove(
-      "bg-gray-200",
-      "dark:bg-gray-700",
-      "text-gray-700",
-      "dark:text-gray-300"
-    );
-    newestButton.classList.add("bg-pink-500", "text-white");
+    const listingsContainer = this.elements.get("listingsContainer");
+    if (listingsContainer?.parentNode) {
+      listingsContainer.parentNode.insertBefore(indicator, listingsContainer);
+    }
   }
 
-  // Load initial listings (will be sorted newest first)
-  fetchlistings();
+  removeSearchIndicator() {
+    const indicator = document.getElementById("search-indicator");
+    if (indicator) {
+      indicator.remove();
+    }
+  }
 
-  // Listen for search events
-  window.addEventListener("searchPerformed", handleSearchResults);
+  updateMediaPreview(mediaCount) {
+    const mediaCountElement = this.elements.get("mediaCount");
+    if (!mediaCountElement) return;
 
-  // Check URL for search parameter and trigger search
-  const urlParams = new URLSearchParams(window.location.search);
-  const searchQuery = urlParams.get("search");
-  if (searchQuery) {
-    const headerSearch = document.getElementById("header-search");
-    const mobileSearch = document.getElementById("mobile-search");
-    if (headerSearch) {
-      headerSearch.value = searchQuery;
-      // Trigger search for this query
+    if (mediaCount === 0) {
+      mediaCountElement.textContent = "No media selected";
+      mediaCountElement.className = "text-gray-600 dark:text-gray-400";
+    } else {
+      mediaCountElement.textContent = `${mediaCount} media item${mediaCount > 1 ? "s" : ""} selected`;
+      mediaCountElement.className = "text-green-600 dark:text-green-400";
+    }
+  }
+}
+
+// API Service - Enhanced error handling
+class APIService {
+  constructor() {
+    this.baseURL = CONSTANTS.API_BASE;
+  }
+
+  async fetchListings() {
+    try {
+      const headers = this.buildHeaders();
+
+      const response = await fetch(
+        `${this.baseURL}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        await this.handleErrorResponse(response);
+      }
+
+      const responseData = await response.json();
+
+      return responseData.data || [];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  buildHeaders() {
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Noroff-API-Key": config.apiKey,
+    };
+
+    if (isAuthenticated()) {
+      headers["Authorization"] = getAuthHeader().Authorization;
+    }
+
+    return headers;
+  }
+
+  async handleErrorResponse(response) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.errors?.[0]?.message || "Failed to fetch listings."
+    );
+  }
+}
+
+// Modal Manager - Simplified and more focused
+class ModalManager {
+  constructor(elementManager, state, ui) {
+    this.elements = elementManager;
+    this.state = state;
+    this.ui = ui;
+  }
+
+  openAddListingModal() {
+    const modal = this.elements.get("addListingModal");
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+    this.setupFormDefaults();
+  }
+
+  closeAddListingModal() {
+    const modal = this.elements.get("addListingModal");
+    const form = this.elements.get("addListingForm");
+
+    if (!modal) return;
+
+    modal.classList.add("hidden");
+    if (form) {
+      form.reset();
+      this.state.clearMediaUrls();
+      this.ui.updateMediaPreview(0);
+    }
+  }
+
+  setupFormDefaults() {
+    Utils.setMinimumDateTime(this.elements.get("listingEndDate"));
+    this.setupMediaModalButton();
+    this.state.clearMediaUrls();
+    this.ui.updateMediaPreview(0);
+  }
+
+  openMediaModal() {
+    const mediaModal = this.elements.get("addMediaModal");
+    const listingModal = this.elements.get("addListingModal");
+
+    if (!mediaModal || !listingModal) return;
+
+    listingModal.classList.add("hidden");
+    mediaModal.classList.remove("hidden");
+    this.setupMediaInputs();
+    this.populateExistingMedia();
+  }
+
+  closeMediaModal() {
+    const mediaModal = this.elements.get("addMediaModal");
+    const listingModal = this.elements.get("addListingModal");
+
+    if (!mediaModal || !listingModal) return;
+
+    mediaModal.classList.add("hidden");
+    listingModal.classList.remove("hidden");
+    this.resetMediaInputs();
+  }
+
+  setupMediaModalButton() {
+    const openButton = this.elements.get("openMediaModalBtn");
+    if (!openButton) return;
+
+    const newBtn = openButton.cloneNode(true);
+    openButton.parentNode.replaceChild(newBtn, openButton);
+    newBtn.addEventListener("click", () => this.openMediaModal());
+  }
+
+  setupMediaInputs() {
+    const addMoreBtn = this.elements.get("addMoreUrlBtn");
+    const backBtn = this.elements.get("backToListingBtn");
+    const mediaForm = this.elements.get("addMediaForm");
+
+    if (addMoreBtn) {
+      addMoreBtn.onclick = (e) => {
+        e.preventDefault();
+        this.addMediaInput();
+      };
+    }
+
+    if (backBtn) {
+      backBtn.onclick = (e) => {
+        e.preventDefault();
+        this.closeMediaModal();
+      };
+    }
+
+    if (mediaForm) {
+      mediaForm.onsubmit = (e) => {
+        e.preventDefault();
+        this.collectAndSaveMediaUrls();
+        this.closeMediaModal();
+      };
+    }
+  }
+
+  addMediaInput() {
+    const mediaContainer = this.elements.get("mediaUrlInputs");
+    if (!mediaContainer) return;
+
+    const currentInputs = mediaContainer.querySelectorAll("input").length;
+    const newInput = this.createMediaInput("", currentInputs + 1);
+    mediaContainer.appendChild(newInput);
+  }
+
+  createMediaInput(value, index) {
+    const input = document.createElement("input");
+    input.type = "url";
+    input.name = "mediaUrl";
+    input.placeholder = `Image URL ${index}`;
+    input.value = value;
+    input.className =
+      "w-full px-3 py-2 border rounded-sm focus:outline-hidden focus:ring-2 focus:ring-pink-500 dark:bg-gray-900 dark:border-gray-700 dark:text-white";
+    return input;
+  }
+
+  populateExistingMedia() {
+    const mediaContainer = this.elements.get("mediaUrlInputs");
+    if (!mediaContainer) return;
+
+    mediaContainer.innerHTML = "";
+    const mediaUrls = this.state.getMediaUrls();
+
+    if (mediaUrls.length > 0) {
+      mediaUrls.forEach((url, index) => {
+        mediaContainer.appendChild(this.createMediaInput(url, index + 1));
+      });
+    } else {
+      for (let i = 1; i <= CONSTANTS.DEFAULT_MEDIA_INPUTS; i++) {
+        mediaContainer.appendChild(this.createMediaInput("", i));
+      }
+    }
+  }
+
+  resetMediaInputs() {
+    const mediaContainer = this.elements.get("mediaUrlInputs");
+    if (!mediaContainer) return;
+
+    mediaContainer.innerHTML = "";
+    for (let i = 1; i <= CONSTANTS.DEFAULT_MEDIA_INPUTS; i++) {
+      mediaContainer.appendChild(this.createMediaInput("", i));
+    }
+  }
+
+  collectAndSaveMediaUrls() {
+    const mediaInputs = document.querySelectorAll("input[name='mediaUrl']");
+    const urls = Array.from(mediaInputs)
+      .map((input) => input.value.trim())
+      .filter((url) => url.length > 0);
+
+    this.state.setMediaUrls(urls);
+    this.ui.updateMediaPreview(urls.length);
+  }
+}
+
+// Event Handler - Centralized event management
+class EventHandler {
+  constructor(elementManager, modalManager, ui, state, apiService) {
+    this.elements = elementManager;
+    this.modalManager = modalManager;
+    this.ui = ui;
+    this.state = state;
+    this.apiService = apiService;
+  }
+
+  setupAllEventListeners() {
+    this.setupSearchEvents();
+    this.setupModalEvents();
+    this.setupFormEvents();
+    this.setupAuthEvents();
+  }
+
+  setupSearchEvents() {
+    window.addEventListener("searchPerformed", (event) =>
+      this.handleSearchResults(event)
+    );
+
+    window.clearSearchResults = () => {
+      Utils.clearSearchResults();
+      this.ui.removeSearchIndicator();
+      this.ui.displayListings(this.state.getListings());
+    };
+  }
+
+  setupModalEvents() {
+    const addListingBtn = this.elements.get("addListingBtn");
+    if (addListingBtn && isAuthenticated()) {
+      addListingBtn.addEventListener("click", () => {
+        this.modalManager.openAddListingModal();
+      });
+    }
+
+    this.setupModalCloseEvents();
+  }
+
+  setupModalCloseEvents() {
+    const closeBtn = this.elements.get("closeAddListingModal");
+    const cancelBtn = this.elements.get("cancelAddListingBtn");
+    const modal = this.elements.get("addListingModal");
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        this.modalManager.closeAddListingModal();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        this.modalManager.closeAddListingModal();
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          this.modalManager.closeAddListingModal();
+        }
+      });
+    }
+  }
+
+  setupFormEvents() {
+    const form = this.elements.get("addListingForm");
+    if (form && isAuthenticated()) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        await this.handleFormSubmission();
+      });
+    }
+  }
+
+  setupAuthEvents() {
+    window.addEventListener("storage", (e) => {
+      if (e.key === "token" || e.key === "user") {
+        this.ui.updateAuthUI();
+      }
+    });
+  }
+
+  handleSearchResults(event) {
+    const { query, results, error, sortBy } = event.detail;
+
+    if (error) {
+      this.ui.showError(`Search error: ${error}`);
+      return;
+    }
+
+    if (results.length === 0) {
+      const message = this.getEmptyResultsMessage(query, sortBy);
+      this.ui.showMessage(message, "info");
+      return;
+    }
+
+    if (query.trim() === "") {
+      this.ui.removeSearchIndicator();
+      this.ui.displayListings(results);
+    } else {
+      this.state.setFilteredListings(results);
+      this.ui.displayListings(results);
+      this.ui.updateSearchIndicator(query, results.length);
+    }
+  }
+
+  getEmptyResultsMessage(query, sortBy) {
+    if (sortBy === "active-auctions") {
+      return query.trim() === ""
+        ? "No active auctions available at the moment."
+        : `No active auctions found for "${query}".`;
+    }
+
+    return query.trim() === ""
+      ? "No listings available at the moment."
+      : `No results found for "${query}".`;
+  }
+
+  async handleFormSubmission() {
+    const formData = this.collectFormData();
+
+    try {
+      await createListing({
+        title: formData.title,
+        description: formData.description,
+        endsAt: formData.endsAt,
+        media: this.state.getMediaUrls(),
+        tags: formData.tags,
+      });
+
+      this.modalManager.closeAddListingModal();
+      await this.reloadListings();
+    } catch (err) {
+      alert(err.message || "Failed to create listing.");
+    }
+  }
+
+  collectFormData() {
+    return {
+      title: this.elements.get("listingTitle")?.value.trim(),
+      description: this.elements.get("listingDesc")?.value.trim(),
+      endsAt: this.elements.get("listingEndDate")?.value,
+      tags: this.elements.get("listingTags")?.value.trim() || "",
+    };
+  }
+
+  async reloadListings() {
+    this.ui.showLoading();
+    try {
+      const listings = await this.apiService.fetchListings();
+      this.state.setListings(listings);
+      this.ui.displayListings(listings);
+    } catch (error) {
+      this.ui.showError(`Error: ${error.message}`);
+    } finally {
+      this.ui.hideLoading();
+    }
+  }
+}
+
+// Main Application Controller - Simplified and more focused
+class ListingsPageController {
+  constructor() {
+    this.elementManager = new DOMElementManager();
+    this.state = new StateManager();
+    this.cardBuilder = new ListingCardBuilder();
+    this.ui = new UIManager(this.elementManager, this.cardBuilder);
+    this.apiService = new APIService();
+    this.modalManager = new ModalManager(
+      this.elementManager,
+      this.state,
+      this.ui
+    );
+    this.eventHandler = new EventHandler(
+      this.elementManager,
+      this.modalManager,
+      this.ui,
+      this.state,
+      this.apiService
+    );
+  }
+
+  async init() {
+    const listingsContainer = this.elementManager.get("listingsContainer");
+    if (!listingsContainer) return;
+
+    searchAndSortComponent.init();
+
+    this.ui.updateAuthUI();
+    this.setDefaultSortButton();
+    await this.loadListings();
+    this.eventHandler.setupAllEventListeners();
+    this.handleURLSearch();
+  }
+
+  async loadListings() {
+    this.ui.showLoading();
+    this.state.setLoading(true);
+
+    try {
+      const listings = await this.apiService.fetchListings();
+      this.state.setListings(listings);
+
+      if (listings.length === 0) {
+        this.ui.showMessage("No listings found.", "info");
+        return;
+      }
+
+      this.ui.displayListings(listings);
+    } catch (error) {
+      this.ui.showMessage(`Error: ${error.message}`, "error");
+    } finally {
+      this.ui.hideLoading();
+      this.state.setLoading(false);
+    }
+  }
+
+  setDefaultSortButton() {
+    const newestButton = document.querySelector(
+      '.sort-btn[data-sort="newest"]'
+    );
+    if (newestButton) {
+      newestButton.classList.remove(
+        "bg-gray-200",
+        "dark:bg-gray-700",
+        "text-gray-700",
+        "dark:text-gray-300"
+      );
+      newestButton.classList.add("bg-pink-500", "text-white");
+    }
+  }
+
+  handleURLSearch() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get("search");
+
+    if (searchQuery) {
+      this.populateSearchInputs(searchQuery);
       setTimeout(() => {
         searchAndSortComponent.performSearch(searchQuery);
       }, 500);
     }
-    if (mobileSearch) {
-      mobileSearch.value = searchQuery;
-    }
   }
 
-  // Modal event listeners (only if user is authenticated)
-  const addListingBtn = document.getElementById("addListingBtn");
-  const addListingModal = document.getElementById("addListingModal");
-  const closeAddListingModal = document.getElementById("closeAddListingModal");
-  const cancelAddListingBtn = document.getElementById("cancelAddListingBtn");
+  populateSearchInputs(searchQuery) {
+    const headerSearch = this.elementManager.get("headerSearch");
+    const mobileSearch = this.elementManager.get("mobileSearch");
 
-  if (addListingBtn && isAuthenticated()) {
-    addListingBtn.addEventListener("click", openAddListingModal);
-  }
-  if (closeAddListingModal)
-    closeAddListingModal.addEventListener("click", closeAddListing);
-  if (cancelAddListingBtn)
-    cancelAddListingBtn.addEventListener("click", closeAddListing);
-
-  // Close modal when clicking outside
-  if (addListingModal) {
-    addListingModal.addEventListener("click", function (event) {
-      if (event.target === addListingModal) {
-        closeAddListing();
-      }
-    });
+    if (headerSearch) headerSearch.value = searchQuery;
+    if (mobileSearch) mobileSearch.value = searchQuery;
   }
 
-  // Add Listing Form Submission (only if user is authenticated)
-  const addListingForm = document.getElementById("addListingForm");
-  if (addListingForm && isAuthenticated()) {
-    addListingForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("listingTitle").value.trim();
-      const description = document.getElementById("listingDesc").value.trim();
-      const endsAt = document.getElementById("listingEndDate").value;
-      const tags = document.getElementById("listingTags")
-        ? document.getElementById("listingTags").value.trim()
-        : "";
-
-      try {
-        await createListing({
-          title,
-          description,
-          endsAt,
-          media: selectedMediaUrls,
-          tags: tags, // Pass tags string to createListing function
-        });
-        closeAddListing();
-        fetchlistings();
-      } catch (err) {
-        alert(err.message || "Failed to create listing.");
-      }
-    });
+  // Public method for creating listing cards (for export)
+  createListingCard(listing) {
+    return this.cardBuilder.build(listing);
   }
+}
 
-  // Listen for authentication state changes
-  window.addEventListener("storage", (e) => {
-    if (e.key === "token" || e.key === "user") {
-      updateAuthUI();
-    }
+// Factory function for creating listing cards (maintains API compatibility)
+export function createListingCard(listing) {
+  const cardBuilder = new ListingCardBuilder();
+  return cardBuilder.build(listing);
+}
+
+// Initialize the application
+document.addEventListener("DOMContentLoaded", () => {
+  const app = new ListingsPageController();
+  app.init().catch((error) => {
+    console.error("Failed to initialize listings page:", error);
   });
 });
-
-// Helper function to process tags from comma-separated string
-function processTags(tagsString) {
-  if (!tagsString || typeof tagsString !== "string") {
-    return [];
-  }
-
-  return tagsString
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter((tag) => tag.length > 0)
-    .slice(0, 10); // Limit to 10 tags
-}

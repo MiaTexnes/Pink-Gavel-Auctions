@@ -2,6 +2,7 @@
  * Search and Sort Component
  * Handles search functionality and sorting for listings
  */
+import { config } from "../services/config.js"; // Import the config object
 
 export class SearchAndSortComponent {
   constructor() {
@@ -149,7 +150,6 @@ export class SearchAndSortComponent {
     };
 
     this.currentSort = sortMapping[sortType] || sortType;
-    console.log("Sort type set to:", this.currentSort);
   }
 
   /**
@@ -261,7 +261,7 @@ export class SearchAndSortComponent {
 
       this.showDropdown(searchInput, query, limitedResults, results.length);
     } catch (error) {
-      console.error("Dropdown search error:", error);
+      // Handle error silently or show user-friendly message
     }
   }
 
@@ -400,12 +400,6 @@ export class SearchAndSortComponent {
     }
 
     this.isSearching = true;
-    console.log(
-      "Performing search for:",
-      query,
-      "with sort:",
-      this.currentSort
-    );
 
     try {
       let results = [];
@@ -418,16 +412,13 @@ export class SearchAndSortComponent {
       // Apply sorting (this will also filter active auctions if needed)
       results = this.sortListings(results, this.currentSort);
 
-      console.log("Search completed, results:", results.length);
-
       // Add special messaging for active auctions
       if (this.currentSort === "active-auctions" && results.length === 0) {
-        console.log("No active auctions found");
+        // Handle no active auctions case
       }
 
       this.dispatchSearchEvent(query, results);
     } catch (error) {
-      console.error("Search error:", error);
       this.dispatchSearchEvent(query, [], error.message);
     } finally {
       this.isSearching = false;
@@ -444,14 +435,13 @@ export class SearchAndSortComponent {
 
     // Return cached results if available and not expired
     if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
-      console.log("Using cached results for:", query);
       return cached.data;
     }
 
     try {
       const headers = {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+        "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
       };
 
       // Add auth header if available
@@ -461,8 +451,6 @@ export class SearchAndSortComponent {
           headers["Authorization"] = authHeader.Authorization;
         }
       }
-
-      console.log("Making search API request for query:", query);
 
       const response = await fetch(
         `${API_BASE}/auction/listings?_seller=true&_bids=true&limit=100&sort=created&sortOrder=desc`,
@@ -476,8 +464,6 @@ export class SearchAndSortComponent {
       const responseData = await response.json();
       const allListings = responseData.data || [];
 
-      console.log("Search API returned", allListings.length, "listings");
-
       // Filter locally for more comprehensive search
       const results = this.filterListings(allListings, query);
 
@@ -487,10 +473,8 @@ export class SearchAndSortComponent {
         timestamp: Date.now(),
       });
 
-      console.log("Filtered to", results.length, "results");
       return results;
     } catch (error) {
-      console.error("API Search error:", error);
       throw error;
     }
   }
@@ -526,8 +510,6 @@ export class SearchAndSortComponent {
   sortListings(listings, sortBy) {
     let sorted = [...listings]; // Create a copy to avoid mutating original
 
-    console.log("Sorting", sorted.length, "listings by:", sortBy);
-
     switch (sortBy) {
       case "newest":
         return sorted.sort((a, b) => new Date(b.created) - new Date(a.created));
@@ -558,7 +540,6 @@ export class SearchAndSortComponent {
         );
 
       default:
-        console.log("Unknown sort type:", sortBy, "using newest");
         return sorted.sort((a, b) => new Date(b.created) - new Date(a.created));
     }
   }
@@ -571,8 +552,6 @@ export class SearchAndSortComponent {
     const headerSearch = document.getElementById("header-search");
     const currentQuery = headerSearch ? headerSearch.value.trim() : "";
 
-    console.log("Applying sort:", this.currentSort, "to query:", currentQuery);
-
     // Re-perform search with new sorting
     this.performSearch(currentQuery);
   }
@@ -581,13 +560,6 @@ export class SearchAndSortComponent {
    * Dispatch search event for pages to handle
    */
   dispatchSearchEvent(query, results, error = null) {
-    console.log("Dispatching search event:", {
-      query,
-      resultsCount: results.length,
-      error,
-      sortBy: this.currentSort,
-    });
-
     const searchEvent = new CustomEvent("searchPerformed", {
       detail: {
         query: query.trim(),
@@ -607,8 +579,6 @@ export class SearchAndSortComponent {
     const headerSearch = document.getElementById("header-search");
     const mobileSearch = document.getElementById("mobile-search");
     const clearButton = document.getElementById("clear-search");
-
-    console.log("Clearing search");
 
     if (headerSearch) {
       headerSearch.value = "";

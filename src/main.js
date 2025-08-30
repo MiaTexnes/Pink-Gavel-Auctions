@@ -1,9 +1,8 @@
 import { initDarkMode, toggleDarkMode } from "./components/darkLight.js";
-import { initializeHeader } from "./components/header.js"; // Changed this import
+import { initializeHeader } from "./components/header.js";
 import { isAuthenticated, logoutUser } from "./library/auth.js";
 import { createGradientButton } from "./components/buttons.js";
 import { loginUser } from "./library/auth.js";
-
 import { initializeFooter } from "./components/footer.js";
 
 // Initialize dark mode for the whole page
@@ -89,7 +88,7 @@ async function handleLogin(event) {
     if (!navigator.onLine) {
       showAlert(
         "error",
-        "Network error. Please check your internet connection.",
+        "Network error. Please check your internet connection."
       );
     } else if (
       error.message.includes("401") ||
@@ -99,7 +98,7 @@ async function handleLogin(event) {
     } else {
       showAlert(
         "error",
-        error.message || "Failed to log in. Please try again later.",
+        error.message || "Failed to log in. Please try again later."
       );
     }
   } finally {
@@ -130,18 +129,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Function to initialize the page
 function initializePage() {
-  console.log("Initializing page...");
-
   // Initialize header using the named export function
   initializeHeader();
 
   initializeFooter();
-
-  // // Add padding to main content to account for fixed header
-  // const main = document.querySelector("main");
-  // if (main) {
-  //   main.classList.add("pt-10");
-  // }
 
   const homeAuthButtons = document.getElementById("home-auth-buttons");
   if (homeAuthButtons) {

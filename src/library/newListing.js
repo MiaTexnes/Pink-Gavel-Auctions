@@ -1,4 +1,4 @@
-// newListing.js
+import { config } from "../services/config.js"; // Import config for API key
 
 // Helper function to validate URL format
 function isValidUrl(string) {
@@ -85,16 +85,12 @@ export async function createListing({
     tags: processedTags,
   };
 
-  console.log("Sending request body:", requestBody);
-  console.log("Token:", token ? "Present" : "Missing");
-  console.log("Authorization header:", `Bearer ${token}`);
-
   try {
     const res = await fetch("https://v2.api.noroff.dev/auction/listings", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+        "X-Noroff-API-Key": config.apiKey, // Use API key from config
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(requestBody),
@@ -102,23 +98,16 @@ export async function createListing({
 
     if (!res.ok) {
       const errorData = await res.json();
-      console.error("API Error Response:", errorData);
-      console.error("Response status:", res.status);
-      console.error(
-        "Response headers:",
-        Object.fromEntries(res.headers.entries()),
-      );
       throw new Error(
         errorData.errors?.[0]?.message ||
           errorData.message ||
-          "Failed to create listing.",
+          "Failed to create listing."
       );
     }
 
     return res.json();
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      console.error("Network error:", error);
       throw new Error("Network error. Please check your internet connection.");
     }
     throw error;

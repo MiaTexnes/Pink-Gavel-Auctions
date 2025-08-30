@@ -1,355 +1,428 @@
 import { isAuthenticated, getAuthHeader } from "../library/auth.js";
+import { config } from "../services/config.js";
 
+// Constants
 const API_BASE = "https://v2.api.noroff.dev";
-const profileContainer = document.getElementById("profiles-container");
+const DEFAULT_AVATAR = "https://placehold.co/100x100?text=Avatar";
+const PROFILES_PER_PAGE = 12;
+const SORT_CRITERIA = {
+  MOST_CREDITS: "mostCredits",
+  LEAST_CREDITS: "leastCredits",
+  MOST_LISTINGS: "mostListings",
+  LEAST_LISTINGS: "leastListings",
+};
 
-/**
- * Fetch the 100 newest created profiles
- * @returns {Promise<Array>} List of profiles
- */
-async function fetchProfiles() {
-  if (!isAuthenticated()) {
-    profileContainer.innerHTML = `
-      <div class="error-message bg-yellow-100 text-yellow-800 p-4 rounded-lg text-center">
-        <p>You must be logged in to view profiles.</p>
-      </div>
-    `;
-    return [];
+// DOM Elements Manager
+class DOMElements {
+  constructor() {
+    this.profileContainer = document.getElementById("profiles-container");
   }
 
-  try {
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
-      ...getAuthHeader(),
-    };
-
-    // Add query parameters to fetch the 100 newest profiles
-    const response = await fetch(
-      `${API_BASE}/auction/profiles?_sort=created&_order=asc&_limit=100`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch profiles: ${response.statusText}`);
-    }
-
-    const profiles = await response.json();
-    return Array.isArray(profiles) ? profiles : profiles.data || [];
-  } catch (error) {
-    console.error("Error fetching profiles:", error);
-    profileContainer.innerHTML = `
-      <div class="error-message bg-red-100 text-red-800 p-4 rounded-lg text-center">
-        <p>Failed to load profiles. Please try again later.</p>
-      </div>
-    `;
-    return [];
-  }
-}
-
-/**
- * Fetch the 100 newest created users
- * @returns {Promise<Array>} List of users
- */
-async function fetchUsers() {
-  if (!isAuthenticated()) {
-    profileContainer.innerHTML = `
-      <div class="error-message bg-yellow-100 text-yellow-800 p-4 rounded-lg text-center">
-        <p>You must be logged in to view users.</p>
-      </div>
-    `;
-    return [];
+  getProfileContainer() {
+    return this.profileContainer;
   }
 
-  try {
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
-      ...getAuthHeader(),
-    };
-
-    // Add query parameters to fetch the 100 newest users
-    const response = await fetch(
-      `${API_BASE}/auction/users?_sort=created&_order=desc&_limit=100`,
-      { headers }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch users: ${response.statusText}`);
-    }
-
-    const users = await response.json();
-    return Array.isArray(users) ? users : users.data || [];
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    profileContainer.innerHTML = `
-      <div class="error-message bg-red-100 text-red-800 p-4 rounded-lg text-center">
-        <p>Failed to load users. Please try again later.</p>
-      </div>
-    `;
-    return [];
-  }
-}
-
-/**
- * Render all profiles with sorting and "View More" and "View Less" buttons
- * @param {Array} profiles - List of profiles
- */
-function renderProfiles(profiles) {
-  if (!profiles || profiles.length === 0) {
-    profileContainer.innerHTML = `
-      <div class="error-message bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 p-4 rounded-lg text-center">
-        <p>No profiles found.</p>
-      </div>
-    `;
-    return;
-  }
-
-  let sortedProfiles = [...profiles]; // Create a copy of the profiles array
-  const profilesToShow = 12; // Number of profiles to show initially
-  let currentIndex = 0;
-
-  function renderBatch() {
-    profileContainer.innerHTML = ""; // Clear container before rendering
-
-    const batch = sortedProfiles.slice(0, currentIndex + profilesToShow);
-    batch.forEach((profile) => {
-      const profileElement = document.createElement("div");
-      profileElement.classList.add(
-        "profile",
-        "p-6",
-        "border",
-        "border-gray-300",
-        "dark:border-gray-700",
-        "rounded-lg",
-        "shadow-md",
-        "bg-white",
-        "dark:bg-gray-800",
-        "hover:shadow-lg",
-        "hover:shadow-black",
-        "transition-shadow",
-        "mb-6"
-      );
-
-      const avatarUrl =
-        profile.avatar?.url ||
-        profile.avatar ||
-        "https://placehold.co/100x100?text=Avatar";
-
-      profileElement.innerHTML = `
-        <div class="flex items-center space-x-4">
-          <img src="${avatarUrl}" alt="${profile.name}'s avatar" class="w-16 h-16 rounded-full object-cover border-2 border-pink-500">
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">${profile.name}</h2>
-            <p class="text-gray-700 dark:text-gray-400">${profile.email || "Email not available"}</p>
-          </div>
-        </div>
-        <div class="mt-4 grid grid-cols-2 gap-4">
-          <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-white p-4 rounded-lg text-center">
-            <h4 class="text-sm font-semibold">Credits</h4>
-            <p class="text-lg font-bold">${profile.credits || 0}</p>
-          </div>
-          <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-white p-4 rounded-lg text-center">
-            <h4 class="text-sm font-semibold">Listings</h4>
-            <p class="text-lg font-bold">${profile._count?.listings || 0}</p>
-          </div>
-        </div>
-        <div class="mt-4 text-center">
-          <a href="/sellerProfile.html?name=${profile.name}" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-all">
-            View Profile
-          </a>
-        </div>
-      `;
-
-      profileContainer.appendChild(profileElement);
-    });
-
-    addControlButtons();
-  }
-
-  function addControlButtons() {
+  getOrCreateControlsContainer() {
     let controlsContainer = document.querySelector("#controls-container");
     if (!controlsContainer) {
       controlsContainer = document.createElement("div");
       controlsContainer.id = "controls-container";
-      controlsContainer.classList.add(
-        "flex",
-        "justify-center",
-        "space-x-4",
-        "mt-4"
-      );
-
-      profileContainer.parentElement.appendChild(controlsContainer);
+      controlsContainer.className = "flex justify-center space-x-4 mt-4";
+      this.profileContainer.parentElement.appendChild(controlsContainer);
     }
-
-    controlsContainer.innerHTML = "";
-
-    if (currentIndex + profilesToShow < sortedProfiles.length) {
-      const viewMoreButton = document.createElement("button");
-      viewMoreButton.textContent = "View More";
-      viewMoreButton.classList.add(
-        "bg-pink-500",
-        "hover:bg-pink-600",
-        "text-white",
-        "font-semibold",
-        "py-2",
-        "px-6",
-        "rounded-lg",
-        "transition-all",
-        "shadow-md"
-      );
-
-      viewMoreButton.addEventListener("click", () => {
-        currentIndex += profilesToShow;
-        renderBatch();
-      });
-
-      controlsContainer.appendChild(viewMoreButton);
-    }
-
-    if (currentIndex > 0) {
-      const viewLessButton = document.createElement("button");
-      viewLessButton.textContent = "View Less";
-      viewLessButton.classList.add(
-        "bg-pink-500",
-        "hover:bg-pink-600",
-        "text-white",
-        "font-semibold",
-        "py-2",
-        "px-6",
-        "rounded-lg",
-        "transition-all",
-        "shadow-md"
-      );
-
-      viewLessButton.addEventListener("click", () => {
-        currentIndex = Math.max(0, currentIndex - profilesToShow);
-        renderBatch();
-      });
-
-      controlsContainer.appendChild(viewLessButton);
-    }
+    return controlsContainer;
   }
 
-  // Add sorting controls
-  function addSortingControls() {
+  getOrCreateSortingContainer() {
     let sortingContainer = document.querySelector("#sorting-container");
     if (!sortingContainer) {
       sortingContainer = document.createElement("div");
       sortingContainer.id = "sorting-container";
-      sortingContainer.classList.add(
-        "flex",
-        "justify-center",
-        "space-x-4",
-        "mb-4"
-      );
-
-      profileContainer.parentElement.insertBefore(
+      sortingContainer.className = "flex justify-center space-x-4 mb-4";
+      this.profileContainer.parentElement.insertBefore(
         sortingContainer,
-        profileContainer
+        this.profileContainer
       );
     }
+    return sortingContainer;
+  }
+}
 
-    sortingContainer.innerHTML = `
-      <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-all" id="toggleCreditsSort">Sort by Most Credits</button>
-      <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-all" id="toggleListingsSort">Sort by Most Listings</button>
-    `;
-
-    let isSortingByMostCredits = true; // Track the current sorting state for credits
-    let isSortingByMostListings = true; // Track the current sorting state for listings
-
-    // Toggle sorting for credits
-    document
-      .getElementById("toggleCreditsSort")
-      .addEventListener("click", () => {
-        if (isSortingByMostCredits) {
-          sortProfiles("leastCredits");
-          document.getElementById("toggleCreditsSort").textContent =
-            "Sort by Least Credits";
-        } else {
-          sortProfiles("mostCredits");
-          document.getElementById("toggleCreditsSort").textContent =
-            "Sort by Most Credits";
-        }
-        isSortingByMostCredits = !isSortingByMostCredits; // Toggle the state
-      });
-
-    // Toggle sorting for listings
-    document
-      .getElementById("toggleListingsSort")
-      .addEventListener("click", () => {
-        if (isSortingByMostListings) {
-          sortProfiles("leastListings");
-          document.getElementById("toggleListingsSort").textContent =
-            "Sort by Least Listings";
-        } else {
-          sortProfiles("mostListings");
-          document.getElementById("toggleListingsSort").textContent =
-            "Sort by Most Listings";
-        }
-        isSortingByMostListings = !isSortingByMostListings; // Toggle the state
-      });
+// State Manager
+class StateManager {
+  constructor() {
+    this.profiles = [];
+    this.sortedProfiles = [];
+    this.currentIndex = 0;
+    this.sortStates = {
+      credits: true, // true = most credits, false = least credits
+      listings: true, // true = most listings, false = least listings
+    };
   }
 
-  /**
-   * Sort profiles based on the selected criteria
-   * @param {string} criteria - The sorting criteria ("mostCredits", "leastCredits", "mostListings", "leastListings")
-   */
-  function sortProfiles(criteria) {
-    if (!sortedProfiles || sortedProfiles.length === 0) return;
+  setProfiles(profiles) {
+    this.profiles = profiles;
+    this.sortedProfiles = [...profiles];
+  }
 
+  getProfiles() {
+    return this.profiles;
+  }
+
+  getSortedProfiles() {
+    return this.sortedProfiles;
+  }
+
+  getCurrentBatch() {
+    return this.sortedProfiles.slice(0, this.currentIndex + PROFILES_PER_PAGE);
+  }
+
+  canShowMore() {
+    return this.currentIndex + PROFILES_PER_PAGE < this.sortedProfiles.length;
+  }
+
+  canShowLess() {
+    return this.currentIndex > 0;
+  }
+
+  showMore() {
+    this.currentIndex += PROFILES_PER_PAGE;
+  }
+
+  showLess() {
+    this.currentIndex = Math.max(0, this.currentIndex - PROFILES_PER_PAGE);
+  }
+
+  resetIndex() {
+    this.currentIndex = 0;
+  }
+
+  toggleCreditsSortState() {
+    this.sortStates.credits = !this.sortStates.credits;
+  }
+
+  toggleListingsSortState() {
+    this.sortStates.listings = !this.sortStates.listings;
+  }
+
+  getCreditsSortState() {
+    return this.sortStates.credits;
+  }
+
+  getListingsSortState() {
+    return this.sortStates.listings;
+  }
+
+  sortProfiles(criteria) {
     switch (criteria) {
-      case "mostCredits":
-        sortedProfiles.sort((a, b) => (b.credits || 0) - (a.credits || 0));
+      case SORT_CRITERIA.MOST_CREDITS:
+        this.sortedProfiles.sort((a, b) => (b.credits || 0) - (a.credits || 0));
         break;
-      case "leastCredits":
-        sortedProfiles.sort((a, b) => (a.credits || 0) - (b.credits || 0));
+      case SORT_CRITERIA.LEAST_CREDITS:
+        this.sortedProfiles.sort((a, b) => (a.credits || 0) - (b.credits || 0));
         break;
-      case "mostListings":
-        sortedProfiles.sort(
+      case SORT_CRITERIA.MOST_LISTINGS:
+        this.sortedProfiles.sort(
           (a, b) => (b._count?.listings || 0) - (a._count?.listings || 0)
         );
         break;
-      case "leastListings":
-        sortedProfiles.sort(
+      case SORT_CRITERIA.LEAST_LISTINGS:
+        this.sortedProfiles.sort(
           (a, b) => (a._count?.listings || 0) - (b._count?.listings || 0)
         );
         break;
-      default:
-        console.warn("Unknown sorting criteria:", criteria);
     }
-
-    // Re-render the profiles after sorting
-    renderBatch();
+    this.resetIndex();
   }
-
-  addSortingControls();
-  renderBatch(); // Render the first batch of profiles
 }
 
-/**
- * Initialize the profiles page
- */
-async function initializeProfilesPage() {
-  profileContainer.innerHTML = `
-    <div class="loading text-center py-8">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-      <p>Loading profiles...</p>
-    </div>
-  `;
+// UI Manager
+class UIManager {
+  constructor(elements, state) {
+    this.elements = elements;
+    this.state = state;
+  }
 
-  try {
-    const profiles = await fetchProfiles();
-    renderProfiles(profiles);
-  } catch (error) {
-    console.error("Error initializing profiles page:", error);
-    profileContainer.innerHTML = `
-      <div class="error-message bg-red-100 text-red-800 p-4 rounded-lg text-center">
-        <p>${error.message || "An unexpected error occurred."}</p>
+  showLoading() {
+    const container = this.elements.getProfileContainer();
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="loading text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+        <p>Loading profiles...</p>
       </div>
     `;
   }
+
+  showError(message, type = "error") {
+    const container = this.elements.getProfileContainer();
+    if (!container) return;
+
+    const bgColor =
+      type === "warning"
+        ? "bg-yellow-100 text-yellow-800"
+        : "bg-red-100 text-red-800";
+    container.innerHTML = `
+      <div class="error-message ${bgColor} p-4 rounded-lg text-center">
+        <p>${message}</p>
+      </div>
+    `;
+  }
+
+  showNoProfiles() {
+    const container = this.elements.getProfileContainer();
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="error-message bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 p-4 rounded-lg text-center">
+        <p>No profiles found.</p>
+      </div>
+    `;
+  }
+
+  showAuthRequired() {
+    this.showError("You must be logged in to view profiles.", "warning");
+  }
+
+  renderProfiles() {
+    const container = this.elements.getProfileContainer();
+    if (!container) return;
+
+    const profiles = this.state.getCurrentBatch();
+
+    if (profiles.length === 0) {
+      this.showNoProfiles();
+      return;
+    }
+
+    container.innerHTML = "";
+    profiles.forEach((profile) => {
+      container.appendChild(this.createProfileCard(profile));
+    });
+
+    this.renderControlButtons();
+  }
+
+  createProfileCard(profile) {
+    const profileElement = document.createElement("div");
+    profileElement.className =
+      "profile p-6 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md bg-white dark:bg-gray-800 hover:shadow-lg hover:shadow-black transition-shadow mb-6";
+
+    const avatarUrl = profile.avatar?.url || profile.avatar || DEFAULT_AVATAR;
+
+    profileElement.innerHTML = `
+      <div class="flex items-center space-x-4">
+        <img src="${avatarUrl}"
+             alt="${profile.name}'s avatar"
+             class="w-16 h-16 rounded-full object-cover border-2 border-pink-500">
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">${profile.name}</h2>
+          <p class="text-gray-700 dark:text-gray-400">${profile.email || "Email not available"}</p>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-4">
+        <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-white p-4 rounded-lg text-center">
+          <h4 class="text-sm font-semibold">Credits</h4>
+          <p class="text-lg font-bold">${profile.credits || 0}</p>
+        </div>
+        <div class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-white p-4 rounded-lg text-center">
+          <h4 class="text-sm font-semibold">Listings</h4>
+          <p class="text-lg font-bold">${profile._count?.listings || 0}</p>
+        </div>
+      </div>
+      <div class="mt-4 text-center">
+        <a href="/sellerProfile.html?name=${profile.name}"
+           class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition-all">
+          View Profile
+        </a>
+      </div>
+    `;
+
+    return profileElement;
+  }
+
+  renderControlButtons() {
+    const controlsContainer = this.elements.getOrCreateControlsContainer();
+    controlsContainer.innerHTML = "";
+
+    if (this.state.canShowMore()) {
+      const viewMoreButton = this.createButton("View More", () => {
+        this.state.showMore();
+        this.renderProfiles();
+      });
+      controlsContainer.appendChild(viewMoreButton);
+    }
+
+    if (this.state.canShowLess()) {
+      const viewLessButton = this.createButton("View Less", () => {
+        this.state.showLess();
+        this.renderProfiles();
+      });
+      controlsContainer.appendChild(viewLessButton);
+    }
+  }
+
+  renderSortingControls() {
+    const sortingContainer = this.elements.getOrCreateSortingContainer();
+
+    const creditsButtonText = this.state.getCreditsSortState()
+      ? "Sort by Most Credits"
+      : "Sort by Least Credits";
+    const listingsButtonText = this.state.getListingsSortState()
+      ? "Sort by Most Listings"
+      : "Sort by Least Listings";
+
+    sortingContainer.innerHTML = `
+      <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-all"
+              id="toggleCreditsSort">${creditsButtonText}</button>
+      <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition-all"
+              id="toggleListingsSort">${listingsButtonText}</button>
+    `;
+
+    this.setupSortingEventListeners();
+  }
+
+  setupSortingEventListeners() {
+    const creditsButton = document.getElementById("toggleCreditsSort");
+    const listingsButton = document.getElementById("toggleListingsSort");
+
+    if (creditsButton) {
+      creditsButton.addEventListener("click", () => {
+        const criteria = this.state.getCreditsSortState()
+          ? SORT_CRITERIA.MOST_CREDITS
+          : SORT_CRITERIA.LEAST_CREDITS;
+        this.state.sortProfiles(criteria);
+        this.state.toggleCreditsSortState();
+        this.renderProfiles();
+        this.renderSortingControls();
+      });
+    }
+
+    if (listingsButton) {
+      listingsButton.addEventListener("click", () => {
+        const criteria = this.state.getListingsSortState()
+          ? SORT_CRITERIA.MOST_LISTINGS
+          : SORT_CRITERIA.LEAST_LISTINGS;
+        this.state.sortProfiles(criteria);
+        this.state.toggleListingsSortState();
+        this.renderProfiles();
+        this.renderSortingControls();
+      });
+    }
+  }
+
+  createButton(text, onClick) {
+    const button = document.createElement("button");
+    button.textContent = text;
+    button.className =
+      "bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-6 rounded-lg transition-all";
+    button.addEventListener("click", onClick);
+    return button;
+  }
 }
 
-// Initialize the page when the DOM is fully loaded
-document.addEventListener("DOMContentLoaded", initializeProfilesPage);
+// API Service
+class APIService {
+  static getHeaders() {
+    if (!isAuthenticated()) {
+      throw new Error("Authentication required");
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Noroff-API-Key": config.apiKey, // Fixed: Use config.apiKey to match listings.js
+    };
+
+    if (isAuthenticated()) {
+      const authHeader = getAuthHeader();
+      headers.Authorization = authHeader.Authorization;
+    }
+
+    return headers;
+  }
+
+  static async fetchProfiles() {
+    try {
+      const headers = this.getHeaders();
+
+      const response = await fetch(
+        `${API_BASE}/auction/profiles?_sort=created&_order=desc&_limit=100&_listings=true&_wins=true`,
+        { headers }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.errors?.[0]?.message ||
+            `Failed to fetch profiles: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const result = await response.json();
+
+      // Handle both array response and data wrapper
+      const profiles = Array.isArray(result) ? result : result.data || [];
+
+      // Ensure profiles have the required structure
+      return profiles.map((profile) => ({
+        ...profile,
+        credits: profile.credits || 0,
+        _count: profile._count || { listings: 0, wins: 0 },
+      }));
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+// Main Profiles Controller
+class ProfilesController {
+  constructor() {
+    this.elements = new DOMElements();
+    this.state = new StateManager();
+    this.ui = new UIManager(this.elements, this.state);
+  }
+
+  async init() {
+    const container = this.elements.getProfileContainer();
+    if (!container) {
+      return;
+    }
+
+    if (!isAuthenticated()) {
+      this.ui.showAuthRequired();
+      return;
+    }
+
+    this.ui.showLoading();
+
+    try {
+      const profiles = await APIService.fetchProfiles();
+
+      if (!profiles || profiles.length === 0) {
+        this.ui.showNoProfiles();
+        return;
+      }
+
+      this.state.setProfiles(profiles);
+      this.ui.renderSortingControls();
+      this.ui.renderProfiles();
+    } catch (error) {
+      if (error.message === "Authentication required") {
+        this.ui.showAuthRequired();
+      } else {
+        this.ui.showError(error.message || "An unexpected error occurred.");
+      }
+    }
+  }
+}
+
+// Initialize the application
+document.addEventListener("DOMContentLoaded", () => {
+  const profilesController = new ProfilesController();
+  profilesController.init();
+});
+
+// Export for testing purposes
+export { ProfilesController, APIService, StateManager };

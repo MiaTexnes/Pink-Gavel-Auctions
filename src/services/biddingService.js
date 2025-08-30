@@ -4,6 +4,7 @@ import {
   getAuthHeader,
 } from "../library/auth.js";
 import { updateUserCredits } from "../components/header.js";
+import { config } from "../services/config.js"; // Import the config object
 
 const API_BASE = "https://v2.api.noroff.dev";
 
@@ -36,7 +37,7 @@ export class BiddingService {
         {
           headers: {
             "Content-Type": "application/json",
-            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
             Authorization: authHeader.Authorization,
           },
         }
@@ -50,7 +51,6 @@ export class BiddingService {
       this.currentUserCredits = data.data.credits;
       return this.currentUserCredits;
     } catch (error) {
-      console.error("Error fetching user credits:", error);
       throw error;
     }
   }
@@ -126,7 +126,7 @@ export class BiddingService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
             Authorization: authHeader.Authorization,
           },
           body: JSON.stringify({ amount: parseInt(bidAmount) }),
@@ -172,7 +172,6 @@ export class BiddingService {
         message: "Bid placed successfully!",
       };
     } catch (error) {
-      console.error("Error placing bid:", error);
       return {
         success: false,
         error:
@@ -283,7 +282,7 @@ export class BiddingService {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
             Authorization: authHeader.Authorization,
           },
           body: JSON.stringify({ credits: amount }),
@@ -302,7 +301,6 @@ export class BiddingService {
         success: true,
       };
     } catch (error) {
-      console.error("Error updating seller's credits:", error);
       return {
         success: false,
         error: error.message || "An unexpected error occurred",
@@ -332,7 +330,7 @@ export class BiddingService {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+            "X-Noroff-API-Key": config.X_NOROFF_API_KEY,
             Authorization: authHeader.Authorization,
           },
           body: JSON.stringify({ credits: amount }),
@@ -351,7 +349,6 @@ export class BiddingService {
         success: true,
       };
     } catch (error) {
-      console.error("Error refunding user's credits:", error);
       return {
         success: false,
         error: error.message || "An unexpected error occurred",
@@ -392,9 +389,7 @@ async function handleAuctionEnd(listingId, bids, sellerName) {
         await biddingService.refundCreditsToUser(bid.userName, bid.amount);
       }
     }
-
-    console.log("Auction ended successfully");
   } catch (error) {
-    console.error("Error handling auction end:", error);
+    // Error handling without console.log
   }
 }

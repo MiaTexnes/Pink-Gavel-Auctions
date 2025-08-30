@@ -1,4 +1,6 @@
 // carousel.js - Carousel component for displaying listings
+import { config } from "../services/config.js"; // Import the config object
+
 
 export function createCarouselCard(listing) {
   const endDate = new Date(listing.endsAt);
@@ -122,7 +124,7 @@ export async function fetchCarouselListings(limit = 20) {
 
   const headers = {
     "Content-Type": "application/json",
-    "X-Noroff-API-Key": "781ee7f3-d027-488c-b315-2ef77865caff",
+    "X-Noroff-API-Key": config.X_NOROFF_API_KEY
   };
 
   const response = await fetch(
